@@ -2,10 +2,13 @@
   "name": "fee-service",
   "version": "1.0.0",
   "main": "src/index.js",
-  "scripts": { "start": "node src/index.js", "dev": "nodemon src/index.js" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -13,5 +16,7 @@
     "morgan": "^1.10.0",
     "uuid": "^10.0.0"
   },
-  "devDependencies": { "nodemon": "^3.1.4" }
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
 }

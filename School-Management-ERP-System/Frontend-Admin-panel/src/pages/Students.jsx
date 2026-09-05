@@ -1,17 +1,52 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Search, Plus, X, Phone, Mail, MapPin, Droplet, Calendar,
-  Save, Pencil, Users, UserCheck, Wallet
+  Search,
+  Plus,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  Droplet,
+  Calendar,
+  Save,
+  Pencil,
+  Users,
+  UserCheck,
+  Wallet,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Input, Select, Pill, statusTone, Avatar, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  statusTone,
+  Avatar,
+  StatCard,
 } from "../components/UI";
 import { students as initialStudents } from "../data/students";
+import { api } from "../lib/api";
 
 const CLASS_OPTIONS = [
-  "All", "Nursery", "LKG", "UKG",
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-  "11-Sci", "11-Com", "12-Sci", "12-Com"
+  "All",
+  "Nursery",
+  "LKG",
+  "UKG",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11-Sci",
+  "11-Com",
+  "12-Sci",
+  "12-Com",
 ];
 
 const SECTION_OPTIONS = ["A", "B", "C"];
@@ -22,7 +57,8 @@ const FEE_STATUS_OPTIONS = ["Paid", "Partially Paid", "Pending"];
 
 function formatClass(c) {
   if (["Nursery", "LKG", "UKG"].includes(c)) return c;
-  if (String(c).startsWith("11") || String(c).startsWith("12")) return `Class ${c}`;
+  if (String(c).startsWith("11") || String(c).startsWith("12"))
+    return `Class ${c}`;
   return `Class ${c}`;
 }
 
@@ -51,8 +87,44 @@ function makeAvatar(name) {
   return `https://ui-avatars.com/api/?name=${encoded}&background=16213E&color=fff&bold=true`;
 }
 
+function normalizeStudent(student) {
+  return {
+    ...student,
+    id: student.id || student._id || student.admissionNo,
+    roll: Number(student.roll ?? student.rollNo ?? 0),
+    contact: student.contact || student.parentContact || "",
+    email: student.email || student.parentEmail || "",
+    fatherName: student.fatherName || student.parentName || "",
+    motherName: student.motherName || "",
+    feeStatus: student.feeStatus || "Pending",
+    attendance: student.attendance ?? 0,
+    house: student.house || "Aravali",
+    avatar: student.avatar || student.photoUrl || makeAvatar(student.name),
+  };
+}
+
+function toApiStudent(form, admissionNo) {
+  return {
+    admissionNo,
+    name: form.name.trim(),
+    gender: form.gender,
+    class: form.class,
+    section: form.section,
+    rollNo: String(form.roll),
+    dob: form.dob || undefined,
+    bloodGroup: form.bloodGroup,
+    address: form.address,
+    parentName: form.fatherName,
+    parentContact: form.contact,
+    parentEmail: form.email,
+    status: "Active",
+  };
+}
+
 export default function Students() {
   const [list, setList] = useState(initialStudents);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
   const [query, setQuery] = useState("");
   const [cls, setCls] = useState("All");
   const [section, setSection] = useState("All");
@@ -60,6 +132,24 @@ export default function Students() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [editId, setEditId] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    api.students
+      .list()
+      .then(({ data }) => {
+        if (active && Array.isArray(data)) setList(data.map(normalizeStudent));
+      })
+      .catch((error) => {
+        if (active) setApiError(error.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     return list
@@ -121,37 +211,27 @@ export default function Students() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim() || !form.roll) return;
 
-    if (editId) {
+    try {
+      const payload = toApiStudent(form, editId || `STU-${Date.now()}`);
+      const response = editId
+        ? await api.students.update(editId, payload)
+        : await api.students.create(payload);
+      const saved = normalizeStudent(response.data);
       setList((prev) =>
-        prev.map((s) =>
-          s.id === editId
-            ? {
-                ...s,
-                ...form,
-                roll: Number(form.roll),
-                attendance: Number(form.attendance) || 0,
-                avatar: s.avatar || makeAvatar(form.name),
-              }
-            : s
-        )
+        editId
+          ? prev.map((student) => (student.id === editId ? saved : student))
+          : [saved, ...prev],
       );
-    } else {
-      const newStudent = {
-        id: `STU${1000 + list.length + Math.floor(Math.random() * 100)}`,
-        ...form,
-        roll: Number(form.roll),
-        attendance: Number(form.attendance) || 95,
-        parentName: `${form.fatherName} Family`,
-        avatar: makeAvatar(form.name),
-      };
-      setList((prev) => [newStudent, ...prev]);
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+      setApiError("");
+    } catch (error) {
+      setApiError(error.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
   return (
@@ -159,13 +239,22 @@ export default function Students() {
       <PageIntro
         eyebrow="Academics"
         title="Student Database"
-        description={`${list.length} students enrolled across Nursery to Class 12.`}
+        description={
+          loading
+            ? "Loading students..."
+            : `${list.length} students enrolled across Nursery to Class 12.`
+        }
         right={
           <Button variant="amber" onClick={openAdd}>
             <Plus size={15} /> Add Student
           </Button>
         }
       />
+      {apiError && (
+        <p className="text-alert text-[13px]" role="alert">
+          {apiError}
+        </p>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -205,7 +294,10 @@ export default function Students() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search name, ID, roll, phone..."
                 value={query}
@@ -213,17 +305,27 @@ export default function Students() {
                 className="pl-8 w-56"
               />
             </div>
-            <Select value={cls} onChange={(e) => setCls(e.target.value)} className="min-w-[120px]">
+            <Select
+              value={cls}
+              onChange={(e) => setCls(e.target.value)}
+              className="min-w-[120px]"
+            >
               {CLASS_OPTIONS.map((c) => (
                 <option key={c} value={c}>
                   {c === "All" ? "All Classes" : formatClass(c)}
                 </option>
               ))}
             </Select>
-            <Select value={section} onChange={(e) => setSection(e.target.value)} className="min-w-[100px]">
+            <Select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="min-w-[100px]"
+            >
               <option value="All">All Sections</option>
               {SECTION_OPTIONS.map((s) => (
-                <option key={s} value={s}>Section {s}</option>
+                <option key={s} value={s}>
+                  Section {s}
+                </option>
               ))}
             </Select>
           </div>
@@ -232,7 +334,9 @@ export default function Students() {
         {filtered.length === 0 ? (
           <div className="py-14 text-center">
             <Users size={36} className="mx-auto text-slate-text/30 mb-3" />
-            <p className="text-[14px] font-medium text-ink">No students found</p>
+            <p className="text-[14px] font-medium text-ink">
+              No students found
+            </p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try different filters or add a new student.
             </p>
@@ -251,7 +355,9 @@ export default function Students() {
                   <th className="px-5 py-2.5 font-semibold">Attendance</th>
                   <th className="px-5 py-2.5 font-semibold">Fee Status</th>
                   <th className="px-5 py-2.5 font-semibold">Contact</th>
-                  <th className="px-5 py-2.5 font-semibold text-right">Actions</th>
+                  <th className="px-5 py-2.5 font-semibold text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -266,7 +372,9 @@ export default function Students() {
                         <Avatar src={s.avatar} name={s.name} size={36} />
                         <div>
                           <p className="font-semibold text-ink">{s.name}</p>
-                          <p className="text-[11.5px] text-slate-text/55">{s.id}</p>
+                          <p className="text-[11.5px] text-slate-text/55">
+                            {s.id}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -280,8 +388,8 @@ export default function Students() {
                           s.attendance >= 90
                             ? "text-success"
                             : s.attendance >= 75
-                            ? "text-amber-dark"
-                            : "text-alert"
+                              ? "text-amber-dark"
+                              : "text-alert"
                         }`}
                       >
                         {s.attendance}%
@@ -290,8 +398,13 @@ export default function Students() {
                     <td className="px-5 py-3">
                       <Pill tone={statusTone(s.feeStatus)}>{s.feeStatus}</Pill>
                     </td>
-                    <td className="px-5 py-3 text-slate-text text-[12.5px]">{s.contact}</td>
-                    <td className="px-5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-5 py-3 text-slate-text text-[12.5px]">
+                      {s.contact}
+                    </td>
+                    <td
+                      className="px-5 py-3 text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         onClick={() => openEdit(s)}
                         className="text-[12.5px] font-medium text-info hover:underline inline-flex items-center gap-1"
@@ -310,11 +423,19 @@ export default function Students() {
       {/* ========== DETAIL DRAWER ========== */}
       {selected && (
         <div className="fixed inset-0 z-40 flex justify-end">
-          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setSelected(null)} />
+          <div
+            className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            onClick={() => setSelected(null)}
+          />
           <div className="relative w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto animate-in slide-in-from-right">
             <div className="sticky top-0 bg-white border-b border-black/[0.06] px-5 py-4 flex items-center justify-between z-10">
-              <h3 className="font-display font-semibold text-ink text-[16px]">Student Profile</h3>
-              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-paper">
+              <h3 className="font-display font-semibold text-ink text-[16px]">
+                Student Profile
+              </h3>
+              <button
+                onClick={() => setSelected(null)}
+                className="p-1.5 rounded-lg hover:bg-paper"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -326,39 +447,55 @@ export default function Students() {
                   alt={selected.name}
                   className="w-20 h-20 rounded-2xl object-cover mx-auto border border-black/10"
                 />
-                <h3 className="font-display font-bold text-ink text-lg mt-3">{selected.name}</h3>
+                <h3 className="font-display font-bold text-ink text-lg mt-3">
+                  {selected.name}
+                </h3>
                 <p className="text-[12.5px] text-slate-text/70">
-                  {selected.id} · {formatClass(selected.class)}-{selected.section} · Roll {selected.roll}
+                  {selected.id} · {formatClass(selected.class)}-
+                  {selected.section} · Roll {selected.roll}
                 </p>
                 <div className="flex justify-center gap-2 mt-3">
-                  <Pill tone={statusTone(selected.feeStatus)}>{selected.feeStatus}</Pill>
+                  <Pill tone={statusTone(selected.feeStatus)}>
+                    {selected.feeStatus}
+                  </Pill>
                   <Pill tone="info">{selected.house} House</Pill>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="bg-paper rounded-xl p-3 text-center">
-                  <p className="font-display text-xl font-bold text-ink">{selected.attendance}%</p>
+                  <p className="font-display text-xl font-bold text-ink">
+                    {selected.attendance}%
+                  </p>
                   <p className="text-[11px] text-slate-text/60">Attendance</p>
                 </div>
                 <div className="bg-paper rounded-xl p-3 text-center">
-                  <p className="font-display text-xl font-bold text-ink">{selected.bloodGroup}</p>
+                  <p className="font-display text-xl font-bold text-ink">
+                    {selected.bloodGroup}
+                  </p>
                   <p className="text-[11px] text-slate-text/60">Blood Group</p>
                 </div>
               </div>
 
               <div className="space-y-2.5 text-[13px] mb-5">
                 <p className="flex items-center gap-2 text-slate-text">
-                  <Calendar size={14} className="text-slate-text/50" /> DOB: {selected.dob}
+                  <Calendar size={14} className="text-slate-text/50" /> DOB:{" "}
+                  {selected.dob}
                 </p>
                 <p className="flex items-center gap-2 text-slate-text">
-                  <Phone size={14} className="text-slate-text/50" /> {selected.contact}
+                  <Phone size={14} className="text-slate-text/50" />{" "}
+                  {selected.contact}
                 </p>
                 <p className="flex items-center gap-2 text-slate-text">
-                  <Mail size={14} className="text-slate-text/50" /> {selected.email}
+                  <Mail size={14} className="text-slate-text/50" />{" "}
+                  {selected.email}
                 </p>
                 <p className="flex items-start gap-2 text-slate-text">
-                  <MapPin size={14} className="text-slate-text/50 mt-0.5 shrink-0" /> {selected.address}
+                  <MapPin
+                    size={14}
+                    className="text-slate-text/50 mt-0.5 shrink-0"
+                  />{" "}
+                  {selected.address}
                 </p>
               </div>
 
@@ -366,15 +503,27 @@ export default function Students() {
                 <p className="text-[12px] font-semibold text-slate-text/60 uppercase mb-2">
                   Parent / Guardian
                 </p>
-                <p className="text-[13px] text-ink font-medium">Father: {selected.fatherName}</p>
-                <p className="text-[13px] text-ink font-medium mt-1">Mother: {selected.motherName}</p>
+                <p className="text-[13px] text-ink font-medium">
+                  Father: {selected.fatherName}
+                </p>
+                <p className="text-[13px] text-ink font-medium mt-1">
+                  Mother: {selected.motherName}
+                </p>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 justify-center" onClick={() => openEdit(selected)}>
+                <Button
+                  variant="outline"
+                  className="flex-1 justify-center"
+                  onClick={() => openEdit(selected)}
+                >
                   <Pencil size={14} /> Edit
                 </Button>
-                <Button variant="amber" className="flex-1 justify-center" onClick={() => setSelected(null)}>
+                <Button
+                  variant="amber"
+                  className="flex-1 justify-center"
+                  onClick={() => setSelected(null)}
+                >
                   Close
                 </Button>
               </div>
@@ -386,7 +535,10 @@ export default function Students() {
       {/* ========== ADD / EDIT MODAL ========== */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div
+            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
               <div>
@@ -397,7 +549,10 @@ export default function Students() {
                   Fill student details and save.
                 </p>
               </div>
-              <button onClick={() => setShowModal(false)} className="p-2 rounded-lg hover:bg-paper text-slate-text">
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 rounded-lg hover:bg-paper text-slate-text"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -405,7 +560,9 @@ export default function Students() {
             <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Full Name *</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Full Name *
+                  </label>
                   <Input
                     placeholder="Student full name"
                     value={form.name}
@@ -414,16 +571,25 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Gender</label>
-                  <Select value={form.gender} onChange={(e) => updateForm("gender", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Gender
+                  </label>
+                  <Select
+                    value={form.gender}
+                    onChange={(e) => updateForm("gender", e.target.value)}
+                  >
                     {GENDER_OPTIONS.map((g) => (
-                      <option key={g} value={g}>{g}</option>
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Date of Birth</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Date of Birth
+                  </label>
                   <Input
                     type="date"
                     value={form.dob}
@@ -432,25 +598,41 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Class</label>
-                  <Select value={form.class} onChange={(e) => updateForm("class", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Class
+                  </label>
+                  <Select
+                    value={form.class}
+                    onChange={(e) => updateForm("class", e.target.value)}
+                  >
                     {CLASS_OPTIONS.filter((c) => c !== "All").map((c) => (
-                      <option key={c} value={c}>{formatClass(c)}</option>
+                      <option key={c} value={c}>
+                        {formatClass(c)}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Section</label>
-                  <Select value={form.section} onChange={(e) => updateForm("section", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Section
+                  </label>
+                  <Select
+                    value={form.section}
+                    onChange={(e) => updateForm("section", e.target.value)}
+                  >
                     {SECTION_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Roll No. *</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Roll No. *
+                  </label>
                   <Input
                     type="number"
                     placeholder="e.g. 101"
@@ -460,34 +642,57 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Blood Group</label>
-                  <Select value={form.bloodGroup} onChange={(e) => updateForm("bloodGroup", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Blood Group
+                  </label>
+                  <Select
+                    value={form.bloodGroup}
+                    onChange={(e) => updateForm("bloodGroup", e.target.value)}
+                  >
                     {BLOOD_OPTIONS.map((b) => (
-                      <option key={b} value={b}>{b}</option>
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">House</label>
-                  <Select value={form.house} onChange={(e) => updateForm("house", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    House
+                  </label>
+                  <Select
+                    value={form.house}
+                    onChange={(e) => updateForm("house", e.target.value)}
+                  >
                     {HOUSE_OPTIONS.map((h) => (
-                      <option key={h} value={h}>{h}</option>
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Fee Status</label>
-                  <Select value={form.feeStatus} onChange={(e) => updateForm("feeStatus", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Fee Status
+                  </label>
+                  <Select
+                    value={form.feeStatus}
+                    onChange={(e) => updateForm("feeStatus", e.target.value)}
+                  >
                     {FEE_STATUS_OPTIONS.map((f) => (
-                      <option key={f} value={f}>{f}</option>
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
                     ))}
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Father's Name</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Father's Name
+                  </label>
                   <Input
                     placeholder="Father's name"
                     value={form.fatherName}
@@ -496,7 +701,9 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Mother's Name</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Mother's Name
+                  </label>
                   <Input
                     placeholder="Mother's name"
                     value={form.motherName}
@@ -505,7 +712,9 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Contact</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Contact
+                  </label>
                   <Input
                     placeholder="+91 ..."
                     value={form.contact}
@@ -514,7 +723,9 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Email</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Email
+                  </label>
                   <Input
                     type="email"
                     placeholder="email@example.com"
@@ -524,7 +735,9 @@ export default function Students() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Address</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Address
+                  </label>
                   <Input
                     placeholder="Full address"
                     value={form.address}
@@ -533,7 +746,9 @@ export default function Students() {
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Attendance %</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Attendance %
+                  </label>
                   <Input
                     type="number"
                     min="0"
@@ -563,10 +778,6 @@ export default function Students() {
     </div>
   );
 }
-
-
-
-
 
 // import { useMemo, useState } from "react";
 // import { Search, Plus, X, Phone, Mail, MapPin, Droplet, Calendar } from "lucide-react";

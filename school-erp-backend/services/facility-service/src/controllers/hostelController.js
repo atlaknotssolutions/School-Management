@@ -24,7 +24,10 @@ const allotRoom = async (req, res) => {
   try {
     const { studentId } = req.body;
     const room = await Hostel.findById(req.params.id);
-    if (!room) return res.status(404).json({ success: false, message: "Room not found" });
+    if (!room)
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
     if (room.occupants.length >= room.capacity) {
       return res.status(400).json({ success: false, message: "Room is full" });
     }
@@ -36,4 +39,39 @@ const allotRoom = async (req, res) => {
   }
 };
 
-module.exports = { createRoom, getRooms, allotRoom };
+const vacateRoom = async (req, res) => {
+  try {
+    const room = await Hostel.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { occupants: req.body.studentId } },
+      { new: true },
+    );
+    if (!room)
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
+    res.json({ success: true, data: room });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+const deleteRoom = async (req, res) => {
+  try {
+    const room = await Hostel.findById(req.params.id);
+    if (!room)
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
+    if (room.occupants.length)
+      return res
+        .status(400)
+        .json({ success: false, message: "Move out occupants first" });
+    await room.deleteOne();
+    res.json({ success: true, message: "Room deleted" });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { createRoom, getRooms, allotRoom, vacateRoom, deleteRoom };

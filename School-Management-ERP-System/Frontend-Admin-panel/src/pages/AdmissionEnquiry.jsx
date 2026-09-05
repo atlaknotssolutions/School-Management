@@ -1,12 +1,29 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Plus, Phone, Search, X, Save, Pencil,
-  UserPlus, PhoneCall, CalendarCheck2, XCircle, Calendar
+  Plus,
+  Phone,
+  Search,
+  X,
+  Save,
+  Pencil,
+  UserPlus,
+  PhoneCall,
+  CalendarCheck2,
+  XCircle,
+  Calendar,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Input, Select, Pill, statusTone, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  statusTone,
+  StatCard,
 } from "../components/UI";
 import { admissionEnquiries as initialEnquiries } from "../data/records";
+import { api } from "../lib/api";
 
 const STATUS_OPTIONS = [
   "All",
@@ -18,21 +35,57 @@ const STATUS_OPTIONS = [
 ];
 
 const CLASS_OPTIONS = [
-  "Nursery", "LKG", "UKG",
-  "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
-  "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
-  "Class 11 (Science)", "Class 11 (Commerce)",
-  "Class 12 (Science)", "Class 12 (Commerce)",
+  "Nursery",
+  "LKG",
+  "UKG",
+  "Class 1",
+  "Class 2",
+  "Class 3",
+  "Class 4",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11 (Science)",
+  "Class 11 (Commerce)",
+  "Class 12 (Science)",
+  "Class 12 (Commerce)",
 ];
 
 const SOURCE_OPTIONS = [
-  "Website", "Walk-in", "Referral", "Social Media", "Newspaper Ad", "Other"
+  "Website",
+  "Walk-in",
+  "Referral",
+  "Social Media",
+  "Newspaper Ad",
+  "Other",
 ];
+
+const backendStatus = {
+  New: "New",
+  Contacted: "Contacted",
+  "Campus Visit Scheduled": "Contacted",
+  "Admission Confirmed": "Admitted",
+  Declined: "Rejected",
+};
+
+const backendSource = {
+  Website: "Website",
+  "Walk-in": "Walk-in",
+  Referral: "Referral",
+  "Social Media": "Other",
+  "Newspaper Ad": "Other",
+  Other: "Other",
+};
 
 function formatDate(d) {
   if (!d || d === "—") return "—";
   return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -51,11 +104,34 @@ function emptyForm() {
 
 export default function AdmissionEnquiry() {
   const [list, setList] = useState(initialEnquiries);
+  const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [editId, setEditId] = useState(null);
+
+  useEffect(() => {
+    api.admissions
+      .list()
+      .then(({ data }) => {
+        setList(
+          data.map((item) => ({
+            ...item,
+            id: item._id,
+            date: item.createdAt || item.date,
+            followUp: item.followUpDate || item.followUp || "—",
+            status:
+              item.status === "Admitted"
+                ? "Admission Confirmed"
+                : item.status === "Rejected"
+                  ? "Declined"
+                  : item.status,
+          })),
+        );
+      })
+      .catch((error) => setLoadError(error.message));
+  }, []);
 
   const filtered = useMemo(() => {
     return list.filter((e) => {
@@ -76,7 +152,8 @@ export default function AdmissionEnquiry() {
     return {
       total: list.length,
       confirmed: list.filter((e) => e.status === "Admission Confirmed").length,
-      scheduled: list.filter((e) => e.status === "Campus Visit Scheduled").length,
+      scheduled: list.filter((e) => e.status === "Campus Visit Scheduled")
+        .length,
       declined: list.filter((e) => e.status === "Declined").length,
       new: list.filter((e) => e.status === "New").length,
     };
@@ -107,38 +184,66 @@ export default function AdmissionEnquiry() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
-    if (!form.childName.trim() || !form.parentName.trim() || !form.contact.trim()) return;
+  const handleSave = async () => {
+    if (
+      !form.childName.trim() ||
+      !form.parentName.trim() ||
+      !form.contact.trim()
+    )
+      return;
 
-    if (editId) {
-      setList((prev) =>
-        prev.map((e) =>
-          e.id === editId
-            ? {
-                ...e,
-                ...form,
-                followUp: form.followUp || "—",
-              }
-            : e
-        )
-      );
-    } else {
-      const newItem = {
-        id: `ENQ${500 + list.length + 1}`,
-        ...form,
-        followUp: form.followUp || "—",
-      };
-      setList((prev) => [newItem, ...prev]);
+    const payload = {
+      childName: form.childName.trim(),
+      parentName: form.parentName.trim(),
+      classApplied: form.classApplied,
+      contact: form.contact.trim(),
+      source: backendSource[form.source] || "Other",
+      status: backendStatus[form.status] || "New",
+      followUpDate: form.followUp || undefined,
+    };
+
+    try {
+      if (editId) {
+        const { data } = await api.admissions.update(editId, payload);
+        setList((prev) =>
+          prev.map((e) =>
+            e.id === editId
+              ? {
+                  ...e,
+                  ...form,
+                  ...data,
+                  id: data._id || editId,
+                  followUp: form.followUp || "—",
+                }
+              : e,
+          ),
+        );
+      } else {
+        const { data } = await api.admissions.create(payload);
+        setList((prev) => [
+          { ...data, id: data._id, ...form, followUp: form.followUp || "—" },
+          ...prev,
+        ]);
+      }
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (error) {
+      setLoadError(error.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
-  const changeStatus = (id, newStatus) => {
-    setList((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
-    );
+  const changeStatus = async (id, newStatus) => {
+    try {
+      await api.admissions.update(id, {
+        status: backendStatus[newStatus] || "New",
+      });
+      setList((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e)),
+      );
+    } catch (error) {
+      setLoadError(error.message);
+    }
   };
 
   return (
@@ -153,6 +258,11 @@ export default function AdmissionEnquiry() {
           </Button>
         }
       />
+      {loadError && (
+        <p className="text-alert text-[13px]">
+          Backend unavailable: {loadError}
+        </p>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,7 +302,10 @@ export default function AdmissionEnquiry() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search child, parent, ID..."
                 value={query}
@@ -203,7 +316,7 @@ export default function AdmissionEnquiry() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="min-w-[180px]"
+              className="min-w-45"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
@@ -217,7 +330,9 @@ export default function AdmissionEnquiry() {
         {filtered.length === 0 ? (
           <div className="py-14 text-center">
             <UserPlus size={36} className="mx-auto text-slate-text/30 mb-3" />
-            <p className="text-[14px] font-medium text-ink">No enquiries found</p>
+            <p className="text-[14px] font-medium text-ink">
+              No enquiries found
+            </p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try different filters or add a new enquiry.
             </p>
@@ -229,7 +344,7 @@ export default function AdmissionEnquiry() {
           <div className="overflow-x-auto -mx-5">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="text-left text-slate-text/60 text-[11.5px] uppercase tracking-wide border-b border-black/[0.06]">
+                <tr className="text-left text-slate-text/60 text-[11.5px] uppercase tracking-wide border-b border-black/6">
                   <th className="px-5 py-2.5 font-semibold">Enquiry ID</th>
                   <th className="px-5 py-2.5 font-semibold">Child</th>
                   <th className="px-5 py-2.5 font-semibold">Parent</th>
@@ -239,19 +354,27 @@ export default function AdmissionEnquiry() {
                   <th className="px-5 py-2.5 font-semibold">Date</th>
                   <th className="px-5 py-2.5 font-semibold">Follow-up</th>
                   <th className="px-5 py-2.5 font-semibold">Status</th>
-                  <th className="px-5 py-2.5 font-semibold text-right">Actions</th>
+                  <th className="px-5 py-2.5 font-semibold text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((e) => (
                   <tr
                     key={e.id}
-                    className="border-b border-black/[0.04] last:border-0 hover:bg-paper/50 transition-colors"
+                    className="border-b border-black/4 last:border-0 hover:bg-paper/50 transition-colors"
                   >
                     <td className="px-5 py-3 font-medium text-ink">{e.id}</td>
-                    <td className="px-5 py-3 font-semibold text-ink">{e.childName}</td>
-                    <td className="px-5 py-3 text-slate-text">{e.parentName}</td>
-                    <td className="px-5 py-3 text-slate-text">{e.classApplied}</td>
+                    <td className="px-5 py-3 font-semibold text-ink">
+                      {e.childName}
+                    </td>
+                    <td className="px-5 py-3 text-slate-text">
+                      {e.parentName}
+                    </td>
+                    <td className="px-5 py-3 text-slate-text">
+                      {e.classApplied}
+                    </td>
                     <td className="px-5 py-3">
                       <span className="inline-flex items-center gap-1.5 text-slate-text">
                         <Phone size={12} className="text-slate-text/50" />
@@ -259,7 +382,9 @@ export default function AdmissionEnquiry() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-slate-text">{e.source}</td>
-                    <td className="px-5 py-3 text-slate-text">{formatDate(e.date)}</td>
+                    <td className="px-5 py-3 text-slate-text">
+                      {formatDate(e.date)}
+                    </td>
                     <td className="px-5 py-3 text-slate-text">
                       {e.followUp && e.followUp !== "—" ? (
                         <span className="inline-flex items-center gap-1">
@@ -274,10 +399,12 @@ export default function AdmissionEnquiry() {
                       <Select
                         value={e.status}
                         onChange={(ev) => changeStatus(e.id, ev.target.value)}
-                        className="text-[12px] py-1.5 min-w-[160px]"
+                        className="text-[12px] py-1.5 min-w-40"
                       >
                         {STATUS_OPTIONS.filter((s) => s !== "All").map((s) => (
-                          <option key={s} value={s}>{s}</option>
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
                         ))}
                       </Select>
                     </td>
@@ -305,7 +432,7 @@ export default function AdmissionEnquiry() {
             onClick={() => setShowModal(false)}
           />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-black/6">
               <div>
                 <h3 className="font-display font-semibold text-ink text-[17px]">
                   {editId ? "Edit Enquiry" : "New Admission Enquiry"}
@@ -355,7 +482,9 @@ export default function AdmissionEnquiry() {
                     onChange={(e) => updateForm("classApplied", e.target.value)}
                   >
                     {CLASS_OPTIONS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
@@ -402,7 +531,9 @@ export default function AdmissionEnquiry() {
                     onChange={(e) => updateForm("source", e.target.value)}
                   >
                     {SOURCE_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </Select>
                 </div>
@@ -416,14 +547,16 @@ export default function AdmissionEnquiry() {
                     onChange={(e) => updateForm("status", e.target.value)}
                   >
                     {STATUS_OPTIONS.filter((s) => s !== "All").map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
             </div>
 
-            <div className="px-5 py-4 border-t border-black/[0.06] flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-black/6 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowModal(false)}>
                 Cancel
               </Button>
@@ -445,8 +578,6 @@ export default function AdmissionEnquiry() {
     </div>
   );
 }
-
-
 
 // import { useState } from "react";
 // import { Plus, Phone, Search } from "lucide-react";

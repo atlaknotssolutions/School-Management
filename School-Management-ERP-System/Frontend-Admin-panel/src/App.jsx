@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import Layout from "./layout/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -22,12 +22,19 @@ import Leave from "./pages/Leave";
 import Hostel from "./pages/Hostel";
 import Payroll from "./pages/Payroll";
 
+function ProtectedLayout() {
+  if (!localStorage.getItem("erp_access_token")) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Layout />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route element={<Layout />}>
+        <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/timetable" element={<Timetable />} />

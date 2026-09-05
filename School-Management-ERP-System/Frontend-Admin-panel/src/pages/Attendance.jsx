@@ -1,28 +1,68 @@
 import { useMemo, useState, useEffect } from "react";
 import {
-  Check, X, Clock3, Download, CalendarCheck, Search,
-  UserCheck, UserX, Timer, CalendarDays, CheckCircle2, AlertCircle
+  Check,
+  X,
+  Clock3,
+  Download,
+  CalendarCheck,
+  Search,
+  UserCheck,
+  UserX,
+  Timer,
+  CalendarDays,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
-import { PageIntro, Card, Button, Select, Input, Avatar, StatCard, Pill } from "../components/UI";
+import {
+  PageIntro,
+  Card,
+  Button,
+  Select,
+  Input,
+  Avatar,
+  StatCard,
+  Pill,
+} from "../components/UI";
 import { students } from "../data/students";
 import {
-  AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, CartesianGrid, YAxis
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  XAxis,
+  Tooltip,
+  CartesianGrid,
+  YAxis,
 } from "recharts";
 import { attendanceTrend } from "../data/academics";
+import { api } from "../lib/api";
 
 const CLASS_OPTIONS = [
-  "Nursery", "LKG", "UKG",
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-  "11-Sci", "11-Com", "12-Sci", "12-Com"
+  "Nursery",
+  "LKG",
+  "UKG",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11-Sci",
+  "11-Com",
+  "12-Sci",
+  "12-Com",
 ];
 
 const SECTION_OPTIONS = ["A", "B", "C"];
 
 const STATUS_CONFIG = {
   present: { label: "P", full: "Present", tone: "success" },
-  absent:  { label: "A", full: "Absent",  tone: "alert" },
-  late:    { label: "L", full: "Late",    tone: "amber" },
-  leave:   { label: "Lv", full: "Leave",  tone: "info" },
+  absent: { label: "A", full: "Absent", tone: "alert" },
+  late: { label: "L", full: "Late", tone: "amber" },
+  leave: { label: "Lv", full: "Leave", tone: "info" },
 };
 
 function formatClassLabel(c) {
@@ -33,7 +73,10 @@ function formatClassLabel(c) {
 
 function todayLabel() {
   return new Date().toLocaleDateString("en-IN", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric"
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 }
 
@@ -48,11 +91,12 @@ export default function Attendance() {
   const list = useMemo(() => {
     return students
       .filter((s) => s.class === cls && s.section === section)
-      .filter((s) =>
-        !query ||
-        s.name.toLowerCase().includes(query.toLowerCase()) ||
-        String(s.roll).includes(query) ||
-        s.id.toLowerCase().includes(query.toLowerCase())
+      .filter(
+        (s) =>
+          !query ||
+          s.name.toLowerCase().includes(query.toLowerCase()) ||
+          String(s.roll).includes(query) ||
+          s.id.toLowerCase().includes(query.toLowerCase()),
       )
       .sort((a, b) => a.roll - b.roll);
   }, [cls, section, query]);
@@ -70,7 +114,9 @@ export default function Attendance() {
 
   const markAll = (status) => {
     const next = {};
-    list.forEach((s) => { next[s.id] = status; });
+    list.forEach((s) => {
+      next[s.id] = status;
+    });
     setMarks(next);
     setSaved(false);
   };
@@ -86,7 +132,21 @@ export default function Attendance() {
     return c;
   }, [list, marks]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await api.attendance.mark(
+      list.map((student) => ({
+        studentId: student.id,
+        class: student.class,
+        section: student.section,
+        date: new Date().toISOString().slice(0, 10),
+        status: {
+          present: "Present",
+          absent: "Absent",
+          late: "Half Day",
+          leave: "Leave",
+        }[getStatus(student.id)],
+      })),
+    );
     setSaved(true);
     setTimeout(() => setSaved(false), 3500);
   };
@@ -119,7 +179,11 @@ export default function Attendance() {
           icon={UserCheck}
           label="This Class Present"
           value={`${counts.present}/${list.length}`}
-          sub={list.length ? `${Math.round((counts.present / list.length) * 100)}% present` : "—"}
+          sub={
+            list.length
+              ? `${Math.round((counts.present / list.length) * 100)}% present`
+              : "—"
+          }
           accent="amber"
         />
         <StatCard
@@ -141,14 +205,21 @@ export default function Attendance() {
       {/* Trend Chart */}
       <Card title="Monthly Attendance Trend (School-wide)">
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={attendanceTrend} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
+          <AreaChart
+            data={attendanceTrend}
+            margin={{ top: 8, right: 12, left: -10, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3F8F5F" stopOpacity={0.28} />
                 <stop offset="100%" stopColor="#3F8F5F" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEAE0" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#EEEAE0"
+            />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 12, fill: "#64748B" }}
@@ -167,7 +238,7 @@ export default function Attendance() {
                 borderRadius: 10,
                 border: "1px solid #E5E2D9",
                 fontSize: 13,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.06)"
+                boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
               }}
               formatter={(value) => [`${value}%`, "Attendance"]}
             />
@@ -187,13 +258,18 @@ export default function Attendance() {
         title={
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
             <span>Daily Attendance Register</span>
-            <span className="text-[12.5px] font-normal text-slate-text/70">{date}</span>
+            <span className="text-[12.5px] font-normal text-slate-text/70">
+              {date}
+            </span>
           </div>
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search name / roll..."
                 value={query}
@@ -201,21 +277,33 @@ export default function Attendance() {
                 className="pl-8 w-44 sm:w-52"
               />
             </div>
-            <Select value={cls} onChange={(e) => setCls(e.target.value)} className="min-w-[130px]">
+            <Select
+              value={cls}
+              onChange={(e) => setCls(e.target.value)}
+              className="min-w-32.5"
+            >
               {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{formatClassLabel(c)}</option>
+                <option key={c} value={c}>
+                  {formatClassLabel(c)}
+                </option>
               ))}
             </Select>
-            <Select value={section} onChange={(e) => setSection(e.target.value)} className="min-w-[100px]">
+            <Select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="min-w-25"
+            >
               {SECTION_OPTIONS.map((s) => (
-                <option key={s} value={s}>Section {s}</option>
+                <option key={s} value={s}>
+                  Section {s}
+                </option>
               ))}
             </Select>
           </div>
         }
       >
         {/* Quick actions + legend */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-black/[0.06]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-black/6">
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => markAll("present")}
@@ -231,24 +319,37 @@ export default function Attendance() {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 text-[11.5px] text-slate-text/70">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-success" /> Present</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-alert" /> Absent</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber" /> Late</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-info" /> Leave</span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-success" /> Present
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-alert" /> Absent
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber" /> Late
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-info" /> Leave
+            </span>
           </div>
         </div>
 
         {/* Student list */}
         {list.length === 0 ? (
           <div className="py-14 text-center">
-            <AlertCircle size={36} className="mx-auto text-slate-text/30 mb-3" />
-            <p className="text-[14px] font-medium text-ink">No students found</p>
+            <AlertCircle
+              size={36}
+              className="mx-auto text-slate-text/30 mb-3"
+            />
+            <p className="text-[14px] font-medium text-ink">
+              No students found
+            </p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try a different class, section, or clear the search.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-black/[0.05]">
+          <div className="divide-y divide-black/5">
             {list.map((s) => {
               const status = getStatus(s.id);
               return (
@@ -259,7 +360,9 @@ export default function Attendance() {
                   <Avatar src={s.avatar} name={s.name} size={38} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-[13.5px] font-semibold text-ink truncate">{s.name}</p>
+                      <p className="text-[13.5px] font-semibold text-ink truncate">
+                        {s.name}
+                      </p>
                       <Pill tone="neutral">#{s.roll}</Pill>
                     </div>
                     <p className="text-[11.5px] text-slate-text/60 mt-0.5">
@@ -272,9 +375,9 @@ export default function Attendance() {
                       const isActive = status === key;
                       const activeStyles = {
                         present: "bg-success text-white border-success",
-                        absent:  "bg-alert text-white border-alert",
-                        late:    "bg-amber text-ink border-amber",
-                        leave:   "bg-info text-white border-info",
+                        absent: "bg-alert text-white border-alert",
+                        late: "bg-amber text-ink border-amber",
+                        leave: "bg-info text-white border-info",
                       };
                       return (
                         <button
@@ -300,10 +403,11 @@ export default function Attendance() {
 
         {/* Footer actions */}
         {list.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 pt-4 border-t border-black/[0.06]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 pt-4 border-t border-black/6">
             <div className="text-[12.5px] text-slate-text/70">
-              Showing <strong className="text-ink">{list.length}</strong> students ·
-              Present <strong className="text-success">{counts.present}</strong> ·
+              Showing <strong className="text-ink">{list.length}</strong>{" "}
+              students · Present{" "}
+              <strong className="text-success">{counts.present}</strong> ·
               Absent <strong className="text-alert">{counts.absent}</strong> ·
               Late <strong className="text-amber-dark">{counts.late}</strong> ·
               Leave <strong className="text-info">{counts.leave}</strong>
@@ -325,13 +429,12 @@ export default function Attendance() {
       {/* Quick tip */}
       <div className="rounded-xl bg-ink/5 border border-ink/10 px-4 py-3.5 text-[13px] text-slate-text">
         <strong className="text-ink">Tip:</strong> Default status is Present.
-        Use the P / A / L / Lv buttons to mark each student.
-        Changes are local until you click <strong>Save Attendance</strong> (demo only).
+        Use the P / A / L / Lv buttons to mark each student. Changes are sent to
+        the backend when you click <strong>Save Attendance</strong>.
       </div>
     </div>
   );
 }
-
 
 // import { useMemo, useState } from "react";
 // import { Check, X, Clock3, Download, CalendarCheck } from "lucide-react";

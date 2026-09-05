@@ -2,13 +2,15 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI ||
-        "mongodb+srv://atlaknotssolutions_db_user:pOokSSkkiGVWknWq@cluster0.kgscxhb.mongodb.net/?appName=Cluster0",
-    );
-    console.log("[auth-service] MongoDB connected");
-  } catch (err) {
-    console.error("[auth-service] MongoDB connection error:", err.message);
+    const mongoURI =
+      process.env.MONGO_URI || "mongodb://localhost:27017/erp_auth";
+
+    await mongoose.connect(mongoURI);
+
+    console.log("[auth-service] MongoDB connected successfully");
+  } catch (error) {
+    console.error("[auth-service] MongoDB connection failed:", error.message);
+
     process.exit(1);
   }
 };
