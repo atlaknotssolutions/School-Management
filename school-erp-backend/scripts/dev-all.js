@@ -1,8 +1,10 @@
 const { spawn } = require("child_process");
+const dotenv = require("dotenv");
 const net = require("net");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
+dotenv.config({ path: path.join(root, ".env") });
 const services = [
   ["gateway", "api-gateway", 5000],
   ["auth", "services/auth-service", 5001],
