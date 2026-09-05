@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api";
 import {
   ShieldCheck,
   CreditCard,
@@ -10,10 +11,6 @@ import {
   X,
 } from "lucide-react";
 import { PageIntro, Card, Button, Input, Pill, Select } from "../components/UI";
-import { api } from "../lib/api";
-const feeStructure = [];
-const students = [];
-
 const methods = [
   {
     key: "upi",
@@ -66,37 +63,107 @@ function todayDisplay() {
   });
 }
 
-function receiptNo() {
-  const d = new Date();
-  return `RCPT-${d.getFullYear()}-${String(Math.floor(900 + Math.random() * 100))}`;
+function normalizePayment(payment, students) {
+  const linkedStudent = students.find(
+    (item) => String(item.id) === String(payment.studentId),
+  );
+  return {
+    ...payment,
+    id: payment._id || payment.id,
+    student: linkedStudent?.name || payment.studentId,
+    amount: Number(payment.amount || 0),
+    method: payment.mode,
+    date: payment.paidOn
+      ? new Date(payment.paidOn).toLocaleDateString("en-IN")
+      : todayDisplay(),
+    receipt: payment.receiptNo,
+    status: "Success",
+  };
 }
 
 export default function OnlinePayment() {
-  const total = useMemo(
-    () => feeStructure.reduce((a, f) => a + f.termAmount, 0),
-    [],
-  );
-
   const [method, setMethod] = useState("upi");
   const [paid, setPaid] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [receipt, setReceipt] = useState("");
+  const [students, setStudents] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [student, setStudent] = useState(students[6]);
+  const [student, setStudent] = useState(null);
   const [upiId, setUpiId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [bank, setBank] = useState(BANKS[0]);
   const [payments, setPayments] = useState([]);
+
   useEffect(() => {
-    api.fees.payments
-      .list()
-      .then(({ data }) => setPayments(data || []))
-      .catch(() => {});
+    Promise.all([
+      api.students.list("limit=1000"),
+      api.fees.invoices.list(),
+      api.fees.payments.list(),
+    ])
+      .then(([studentResponse, invoiceResponse, paymentResponse]) => {
+        const loadedInvoices = invoiceResponse.data || [];
+        const loadedStudents = (studentResponse.data || []).map((item) => {
+          const studentInvoices = loadedInvoices.filter(
+            (invoice) => String(invoice.studentId) === String(item._id),
+          );
+          const pendingAmount = studentInvoices.reduce(
+            (sum, invoice) =>
+              sum +
+              Math.max(
+                0,
+                Number(invoice.amount) - Number(invoice.paidAmount || 0),
+              ),
+            0,
+          );
+          return {
+            ...item,
+            id: item._id,
+            displayId: item.admissionNo,
+            avatar:
+              item.photoUrl ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=16213E&color=fff&bold=true`,
+            feeStatus: pendingAmount === 0 ? "Paid" : "Pending",
+          };
+        });
+        setStudents(loadedStudents);
+        setInvoices(loadedInvoices);
+        setPayments(
+          (paymentResponse.data || []).map((payment) =>
+            normalizePayment(payment, loadedStudents),
+          ),
+        );
+        setStudent(loadedStudents[0] || null);
+      })
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
   }, []);
+
+  const feeStructure = useMemo(
+    () =>
+      invoices
+        .filter((invoice) => String(invoice.studentId) === String(student?.id))
+        .map((invoice) => ({
+          ...invoice,
+          head: invoice.feeType,
+          termAmount: Math.max(
+            0,
+            Number(invoice.amount) - Number(invoice.paidAmount || 0),
+          ),
+        })),
+    [invoices, student],
+  );
+
+  const total = useMemo(
+    () => feeStructure.reduce((sum, invoice) => sum + invoice.termAmount, 0),
+    [feeStructure],
+  );
 
   const filteredStudents = useMemo(() => {
     const q = query.toLowerCase();
@@ -105,16 +172,21 @@ export default function OnlinePayment() {
       const matchQuery =
         !q ||
         s.name.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q);
+        String(s.displayId || s.id)
+          .toLowerCase()
+          .includes(q);
       return matchClass && matchQuery;
     });
-  }, [query, classFilter]);
+  }, [query, classFilter, students]);
 
   const paidAmount = payments.reduce((a, p) => a + p.amount, 0);
   const paymentCount = payments.length;
   const pendingStudents = new Set(
     students.map((s) => (s.feeStatus !== "Paid" ? s.id : null)).filter(Boolean),
   ).size;
+
+  const paymentMode =
+    method === "upi" ? "UPI" : method === "card" ? "Card" : "Net Banking";
 
   const paymentReady = () => {
     if (method === "upi") return upiId.trim().length > 0 && upiId.includes("@");
@@ -135,27 +207,54 @@ export default function OnlinePayment() {
     setBank(BANKS[0]);
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
+    if (!student || feeStructure.length === 0) return;
     setProcessing(true);
-    setTimeout(() => {
-      const rcp = receiptNo();
-      setReceipt(rcp);
+    setError("");
+    try {
+      const responses = await Promise.all(
+        feeStructure.map((invoice) =>
+          api.fees.payments.create({
+            invoiceId: invoice._id,
+            amount: invoice.termAmount,
+            mode: paymentMode,
+            transactionId: `${paymentMode}-${Date.now()}-${invoice._id}`,
+          }),
+        ),
+      );
+      const latestReceipt = responses.at(-1)?.data?.payment?.receiptNo || "";
+      setReceipt(latestReceipt);
       setPayments((prev) => [
-        {
-          id: Date.now(),
-          student: student.name,
-          studentId: student.id,
-          amount: total,
-          method,
-          date: todayDisplay(),
-          receipt: rcp,
-        },
+        ...responses.map((response) =>
+          normalizePayment(response.data.payment, [student]),
+        ),
         ...prev,
       ]);
-      setProcessing(false);
+      setInvoices((prev) =>
+        prev.map((invoice) => {
+          const paidInvoice = feeStructure.find(
+            (item) => item._id === invoice._id,
+          );
+          return paidInvoice
+            ? {
+                ...invoice,
+                paidAmount:
+                  Number(invoice.paidAmount || 0) + paidInvoice.termAmount,
+                status: "Paid",
+              }
+            : invoice;
+        }),
+      );
+      setStudent((current) =>
+        current ? { ...current, feeStatus: "Paid" } : current,
+      );
       setPaid(true);
       clearFields();
-    }, 1200);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleMakeAnother = () => {
@@ -169,6 +268,35 @@ export default function OnlinePayment() {
     setPickerOpen(false);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageIntro
+          eyebrow="Finance"
+          title="Online Fees Payment"
+          description="Loading students and fee invoices..."
+        />
+      </div>
+    );
+  }
+
+  if (!student) {
+    return (
+      <div className="space-y-6">
+        <PageIntro
+          eyebrow="Finance"
+          title="Online Fees Payment"
+          description={error || "No students are available for payment."}
+        />
+        <Card>
+          <p className="text-sm text-slate-text">
+            Add a student and fee invoice before starting an online payment.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageIntro
@@ -176,6 +304,12 @@ export default function OnlinePayment() {
         title="Online Fees Payment"
         description="Secure, parent-facing checkout for term fee payments."
       />
+
+      {error && (
+        <Card>
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card bodyClassName="p-5">
@@ -285,7 +419,8 @@ export default function OnlinePayment() {
                 {student.name}
               </p>
               <p className="text-[11.5px] text-slate-text/60">
-                {student.id} · Class {student.class}-{student.section}
+                {student.displayId || student.id} · Class {student.class}-
+                {student.section}
               </p>
             </div>
             <span className="text-[11.5px] font-semibold text-info shrink-0">
