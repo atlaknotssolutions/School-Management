@@ -27,6 +27,7 @@ import {
   statusTone,
   StatCard,
 } from "../components/UI";
+import { api } from "../lib/api";
 const initialRoutes = [];
 const transportDesk = { name: "", phone: "" };
 
@@ -316,13 +317,42 @@ function CctvGrid({ bus, onOpen }) {
 
 export default function BusTracking() {
   const [routes, setRoutes] = useState(initialRoutes);
-  const [selected, setSelected] = useState(initialRoutes[0]);
+  const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ ...initialRoutes[0] });
+  const [form, setForm] = useState({});
   const [cctvBus, setCctvBus] = useState(null);
   const [cctvCam, setCctvCam] = useState(0);
+
+  useEffect(() => {
+    api.transport
+      .list()
+      .then(({ data }) => {
+        const loadedRoutes = (data || []).map((route) => ({
+          ...route,
+          id: route.routeNo || route._id,
+          route:
+            route.stops?.map((stop) => stop.name).join(" — ") ||
+            "Route details unavailable",
+          status: route.currentLocation ? "On Route" : "Not Started",
+          lat: route.currentLocation?.lat || SCHOOL_LOCATION.lat,
+          lng: route.currentLocation?.lng || SCHOOL_LOCATION.lng,
+          occupied: route.assignedStudents?.length || 0,
+          capacity: "—",
+          eta: route.currentLocation ? "Live" : "—",
+          driver: route.driverName || "Driver not assigned",
+          driverPhone: route.driverContact || "—",
+          conductor: "Not assigned",
+          conductorPhone: "—",
+          cctvCount: 4,
+        }));
+        setRoutes(loadedRoutes);
+        setSelected(loadedRoutes[0] || null);
+        setForm(loadedRoutes[0] || {});
+      })
+      .catch(() => {});
+  }, []);
   const positions = useLivePositions(routes);
 
   const filtered = useMemo(() => {
@@ -372,6 +402,24 @@ export default function BusTracking() {
   };
 
   const activeBus = selected;
+
+  if (!activeBus) {
+    return (
+      <div className="space-y-5">
+        <PageIntro
+          eyebrow="Operations · Transport"
+          title="Live Fleet Tracking"
+          description="No transport routes are available yet. Add a bus route to start tracking."
+        />
+        <Card>
+          <p className="text-sm text-slate-text">
+            Transport route data will appear here after it is created in the
+            backend.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

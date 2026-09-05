@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Printer, Download, Search } from "lucide-react";
-import { PageIntro, Card, Button, Select, Input, Pill } from "../components/UI";
-const students = [];
+import { PageIntro, Card, Button, Select, Input } from "../components/UI";
+import { api } from "../lib/api";
 const school = {
   name: "School Management ERP",
   address: "",
@@ -9,26 +9,6 @@ const school = {
   session: String(new Date().getFullYear()),
   logo: "S",
 };
-
-const SUBJECTS = [
-  "English",
-  "Hindi",
-  "Mathematics",
-  "Science",
-  "Social Science",
-  "Computer Science",
-];
-
-// Deterministic fake marks per student + subject (static demo)
-function getMarksForStudent(studentId, subjectIndex) {
-  let hash = 0;
-  const str = studentId + subjectIndex;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) % 1000;
-  }
-  // marks between 62 and 98
-  return 62 + (hash % 37);
-}
 
 function getGrade(pct) {
   if (pct >= 91) return "A1";
@@ -59,11 +39,42 @@ function formatClass(c) {
 }
 
 export default function ReportCard() {
-  const [selectedId, setSelectedId] = useState(
-    students[3]?.id || students[0]?.id,
-  );
+  const [students, setStudents] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
   const [term, setTerm] = useState("Term 2");
   const [query, setQuery] = useState("");
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api.students
+      .list("limit=1000")
+      .then(({ data }) => {
+        const loadedStudents = (data || []).map((item) => ({
+          ...item,
+          id: item._id,
+          roll: item.rollNo || "—",
+          fatherName: item.parentName || "—",
+          avatar:
+            item.photoUrl ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=16213E&color=fff&bold=true`,
+        }));
+        setStudents(loadedStudents);
+        setSelectedId(loadedStudents[0]?.id || "");
+      })
+      .catch((requestError) => setError(requestError.message));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setReport(null);
+      return;
+    }
+    api.marks
+      .reportCard(`studentId=${encodeURIComponent(selectedId)}`)
+      .then(({ data }) => setReport(data))
+      .catch((requestError) => setError(requestError.message));
+  }, [selectedId, term]);
 
   const filteredStudents = useMemo(() => {
     if (!query.trim()) return students.slice(0, 40);
@@ -76,19 +87,22 @@ export default function ReportCard() {
           String(s.roll).includes(q),
       )
       .slice(0, 40);
-  }, [query]);
+  }, [query, students]);
 
   const student = students.find((s) => s.id === selectedId) || students[0];
 
   const results = useMemo(() => {
-    if (!student) return [];
-    return SUBJECTS.map((subject, i) => {
-      const marks = getMarksForStudent(student.id, i);
-      const max = 100;
-      const grade = getGrade((marks / max) * 100);
-      return { subject, marks, max, grade };
+    return (report?.subjects || []).map((item) => {
+      const marks = Number(item.marksObtained || 0);
+      const max = Number(item.maxMarks || 0);
+      return {
+        subject: item.subject,
+        marks,
+        max,
+        grade: getGrade(max ? (marks / max) * 100 : 0),
+      };
     });
-  }, [student]);
+  }, [report]);
 
   const total = results.reduce((a, r) => a + r.marks, 0);
   const maxTotal = results.reduce((a, r) => a + r.max, 0);
@@ -97,6 +111,23 @@ export default function ReportCard() {
   const remark = getRemark(Number(pct));
 
   const attendancePct = student?.attendance ?? 90;
+
+  if (!student) {
+    return (
+      <div className="space-y-6">
+        <PageIntro
+          eyebrow="Academics"
+          title="Report Card"
+          description={error || "No students are available for a report card."}
+        />
+        <Card>
+          <p className="text-sm text-slate-text">
+            Create a student record before generating a report card.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
