@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
 import {
   ShieldCheck,
   CreditCard,
@@ -11,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { PageIntro, Card, Button, Input, Pill, Select } from "../components/UI";
+import { api } from "../lib/api";
 const feeStructure = [];
 const students = [];
 
@@ -90,7 +90,13 @@ export default function OnlinePayment() {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [bank, setBank] = useState(BANKS[0]);
-  const [payments, setPayments] = useLocalStorage("sap_online_payments", []);
+  const [payments, setPayments] = useState([]);
+  useEffect(() => {
+    api.fees.payments
+      .list()
+      .then(({ data }) => setPayments(data || []))
+      .catch(() => {});
+  }, []);
 
   const filteredStudents = useMemo(() => {
     const q = query.toLowerCase();
