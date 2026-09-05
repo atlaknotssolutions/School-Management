@@ -19,35 +19,100 @@ const limiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: "Too many requests, please try again later." },
+  message: {
+    success: false,
+    message: "Too many requests, please try again later.",
+  },
 });
 app.use(limiter);
 
 app.get("/health", (req, res) => {
-  res.json({ success: true, service: "api-gateway", status: "UP", time: new Date().toISOString() });
+  res.json({
+    success: true,
+    service: "api-gateway",
+    status: "UP",
+    time: new Date().toISOString(),
+  });
 });
 
 // Route map: gateway path -> downstream microservice
 const routes = [
-  { path: "/api/auth", target: process.env.AUTH_SERVICE_URL || "http://localhost:5001" },
-  { path: "/api/students", target: process.env.STUDENT_SERVICE_URL || "http://localhost:5002" },
-  { path: "/api/admissions", target: process.env.STUDENT_SERVICE_URL || "http://localhost:5002" },
-  { path: "/api/staff", target: process.env.STAFF_SERVICE_URL || "http://localhost:5003" },
-  { path: "/api/leaves", target: process.env.STAFF_SERVICE_URL || "http://localhost:5003" },
-  { path: "/api/payroll", target: process.env.STAFF_SERVICE_URL || "http://localhost:5003" },
-  { path: "/api/attendance", target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004" },
-  { path: "/api/timetable", target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004" },
-  { path: "/api/homework", target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004" },
-  { path: "/api/exams", target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004" },
-  { path: "/api/marks", target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004" },
-  { path: "/api/fees", target: process.env.FEE_SERVICE_URL || "http://localhost:5005" },
-  { path: "/api/payments", target: process.env.FEE_SERVICE_URL || "http://localhost:5005" },
-  { path: "/api/notices", target: process.env.COMMUNICATION_SERVICE_URL || "http://localhost:5006" },
-  { path: "/api/events", target: process.env.COMMUNICATION_SERVICE_URL || "http://localhost:5006" },
-  { path: "/api/library", target: process.env.LIBRARY_SERVICE_URL || "http://localhost:5007" },
-  { path: "/api/hostel", target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008" },
-  { path: "/api/transport", target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008" },
-  { path: "/api/inventory", target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008" },
+  {
+    path: "/api/auth",
+    target: process.env.AUTH_SERVICE_URL || "http://localhost:5001",
+  },
+  {
+    path: "/api/students",
+    target: process.env.STUDENT_SERVICE_URL || "http://localhost:5002",
+  },
+  {
+    path: "/api/admissions",
+    target: process.env.STUDENT_SERVICE_URL || "http://localhost:5002",
+  },
+  {
+    path: "/api/staff",
+    target: process.env.STAFF_SERVICE_URL || "http://localhost:5003",
+  },
+  {
+    path: "/api/leaves",
+    target: process.env.STAFF_SERVICE_URL || "http://localhost:5003",
+  },
+  {
+    path: "/api/payroll",
+    target: process.env.STAFF_SERVICE_URL || "http://localhost:5003",
+  },
+  {
+    path: "/api/attendance",
+    target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004",
+  },
+  {
+    path: "/api/timetable",
+    target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004",
+  },
+  {
+    path: "/api/homework",
+    target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004",
+  },
+  {
+    path: "/api/exams",
+    target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004",
+  },
+  {
+    path: "/api/marks",
+    target: process.env.ACADEMIC_SERVICE_URL || "http://localhost:5004",
+  },
+  {
+    path: "/api/fees",
+    target: process.env.FEE_SERVICE_URL || "http://localhost:5005",
+  },
+  {
+    path: "/api/payments",
+    target: process.env.FEE_SERVICE_URL || "http://localhost:5005",
+  },
+  {
+    path: "/api/notices",
+    target: process.env.COMMUNICATION_SERVICE_URL || "http://localhost:5006",
+  },
+  {
+    path: "/api/events",
+    target: process.env.COMMUNICATION_SERVICE_URL || "http://localhost:5006",
+  },
+  {
+    path: "/api/library",
+    target: process.env.LIBRARY_SERVICE_URL || "http://localhost:5007",
+  },
+  {
+    path: "/api/hostel",
+    target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008",
+  },
+  {
+    path: "/api/transport",
+    target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008",
+  },
+  {
+    path: "/api/inventory",
+    target: process.env.FACILITY_SERVICE_URL || "http://localhost:5008",
+  },
 ];
 
 routes.forEach(({ path, target }) => {
@@ -56,16 +121,20 @@ routes.forEach(({ path, target }) => {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      pathRewrite: { [`^${path}`]: path },
+      pathRewrite: (_requestPath, req) => req.originalUrl,
       onError: (err, req, res) => {
-        res.status(502).json({ success: false, message: `Service unreachable: ${target}` });
+        res
+          .status(502)
+          .json({ success: false, message: `Service unreachable: ${target}` });
       },
-    })
+    }),
   );
 });
 
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found on API Gateway" });
+  res
+    .status(404)
+    .json({ success: false, message: "Route not found on API Gateway" });
 });
 
 app.listen(PORT, () => {
