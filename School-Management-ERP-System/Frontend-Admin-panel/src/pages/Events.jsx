@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   MapPin,
@@ -20,6 +19,7 @@ import {
   Pill,
   StatCard,
 } from "../components/UI";
+import { api } from "../lib/api";
 const initialEvents = [];
 
 const CATEGORIES = [
@@ -82,7 +82,13 @@ function emptyForm() {
 }
 
 export default function Events() {
-  const [events, setEvents] = useLocalStorage("sap_events", initialEvents);
+  const [events, setEvents] = useState(initialEvents);
+  useEffect(() => {
+    api.events
+      .list()
+      .then(({ data }) => setEvents(data || []))
+      .catch(() => {});
+  }, []);
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [view, setView] = useState("upcoming"); // upcoming | past | all

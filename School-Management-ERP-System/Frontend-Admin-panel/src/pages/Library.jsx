@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   BookOpen,
@@ -22,6 +22,7 @@ import {
   toast,
 } from "../components/UI";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { api } from "../lib/api";
 const seed = [];
 const seedIssues = [];
 
@@ -64,8 +65,16 @@ function emptyBookForm() {
 }
 
 export default function Library() {
-  const [books, setBooks] = useLocalStorage("sap_library_books", seed);
-  const [issues, setIssues] = useLocalStorage("sap_library_issues", seedIssues);
+  const [books, setBooks] = useState(seed);
+  const [issues, setIssues] = useState(seedIssues);
+  useEffect(() => {
+    Promise.all([api.books.list(), api.issues.list()])
+      .then(([bookResponse, issueResponse]) => {
+        setBooks(bookResponse.data || []);
+        setIssues(issueResponse.data || []);
+      })
+      .catch(() => {});
+  }, []);
   const [query, setQuery] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [tab, setTab] = useState("books");

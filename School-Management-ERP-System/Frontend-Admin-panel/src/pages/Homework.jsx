@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api";
 import {
   Plus,
   BookOpenCheck,
@@ -98,7 +98,13 @@ function emptyForm() {
 }
 
 export default function Homework() {
-  const [items, setItems] = useLocalStorage("sap_homework", initialHomework);
+  const [items, setItems] = useState(initialHomework);
+  useEffect(() => {
+    api.homework
+      .list()
+      .then(({ data }) => setItems(data || []))
+      .catch(() => {});
+  }, []);
   const [cls, setCls] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [query, setQuery] = useState("");

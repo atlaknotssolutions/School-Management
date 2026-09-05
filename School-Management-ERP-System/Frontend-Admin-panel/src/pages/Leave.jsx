@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   CalendarDays,
@@ -22,7 +22,7 @@ import {
   StatCard,
   toast,
 } from "../components/UI";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { api } from "../lib/api";
 const leaveSeed = [];
 const balanceSeed = [];
 
@@ -66,14 +66,14 @@ function inDays(n) {
 }
 
 export default function Leave() {
-  const [requests, setRequests] = useLocalStorage(
-    "sap_leave_requests",
-    leaveSeed,
-  );
-  const [balance, setBalance] = useLocalStorage(
-    "sap_leave_balance",
-    balanceSeed,
-  );
+  const [requests, setRequests] = useState(leaveSeed);
+  const [balance, setBalance] = useState(balanceSeed);
+  useEffect(() => {
+    api.leaves
+      .list()
+      .then(({ data }) => setRequests(data || []))
+      .catch(() => {});
+  }, []);
   const [tab, setTab] = useState("requests");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

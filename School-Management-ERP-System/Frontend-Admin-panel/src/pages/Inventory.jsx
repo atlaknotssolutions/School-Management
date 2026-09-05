@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api";
 import {
   Plus,
   Boxes,
@@ -63,7 +63,13 @@ function nextId(current) {
 }
 
 export default function Inventory() {
-  const [items, setItems] = useLocalStorage("sap_inventory", initialInventory);
+  const [items, setItems] = useState(initialInventory);
+  useEffect(() => {
+    api.inventory
+      .list()
+      .then(({ data }) => setItems(data || []))
+      .catch(() => {});
+  }, []);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);

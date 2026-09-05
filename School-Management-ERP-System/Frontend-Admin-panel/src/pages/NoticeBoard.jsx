@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
 import { Pin, Plus, X, Save, Pencil, Bell, Search, PinOff } from "lucide-react";
 import {
   PageIntro,
@@ -10,7 +9,9 @@ import {
   Pill,
   StatCard,
 } from "../components/UI";
-import { notices as initialNotices } from "../data/records";
+import { api } from "../lib/api";
+
+const initialNotices = [];
 
 const CATEGORIES = [
   "Academic",
@@ -64,12 +65,20 @@ function emptyForm() {
 }
 
 export default function NoticeBoard() {
-  const [notices, setNotices] = useLocalStorage("sap_notices", initialNotices);
+  const [notices, setNotices] = useState(initialNotices);
+  const [error, setError] = useState("");
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [editId, setEditId] = useState(null);
+
+  useEffect(() => {
+    api.notices
+      .list()
+      .then(({ data }) => setNotices(data || []))
+      .catch((e) => setError(e.message));
+  }, []);
 
   const cats = useMemo(
     () => ["All", ...new Set(notices.map((n) => n.category))],
@@ -136,33 +145,48 @@ export default function NoticeBoard() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.body.trim()) return;
-
-    if (editId) {
-      setNotices((prev) =>
-        prev.map((n) => (n.id === editId ? { ...n, ...form } : n)),
-      );
-    } else {
-      const newNotice = {
-        id: Date.now(),
-        ...form,
-      };
-      setNotices((prev) => [newNotice, ...prev]);
+    try {
+      if (editId) await api.notices.remove(editId);
+      const { data } = await api.notices.create(form);
+      setNotices((prev) => [
+        data,
+        ...prev.filter((notice) => (notice._id || notice.id) !== editId),
+      ]);
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (e) {
+      setError(e.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
-  const togglePin = (id) => {
-    setNotices((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)),
-    );
+  const togglePin = async (id) => {
+    const notice = notices.find((item) => (item._id || item.id) === id);
+    if (!notice) return;
+    try {
+      await api.notices.remove(id);
+      const { data } = await api.notices.create({
+        ...notice,
+        pinned: !notice.pinned,
+        _id: undefined,
+      });
+      setNotices((prev) =>
+        prev.map((item) => ((item._id || item.id) === id ? data : item)),
+      );
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
-  const handleDelete = (id) => {
-    setNotices((prev) => prev.filter((n) => n.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await api.notices.remove(id);
+      setNotices((prev) => prev.filter((n) => (n._id || n.id) !== id));
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
@@ -177,6 +201,9 @@ export default function NoticeBoard() {
           </Button>
         }
       />
+      {error && (
+        <p className="text-alert text-[13px]">Backend unavailable: {error}</p>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { api } from "../lib/api";
 import {
   Plus,
   Wallet,
@@ -72,10 +73,13 @@ function emptyForm() {
 }
 
 export default function FeesCollection() {
-  const [transactions, setTransactions] = useLocalStorage(
-    "sap_fee_transactions",
-    initialTransactions,
-  );
+  const [transactions, setTransactions] = useState(initialTransactions);
+  useEffect(() => {
+    api.fees.payments
+      .list()
+      .then(({ data }) => setTransactions(data || []))
+      .catch(() => {});
+  }, []);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);

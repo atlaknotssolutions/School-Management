@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Wallet,
@@ -21,7 +21,7 @@ import {
   StatCard,
   toast,
 } from "../components/UI";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { api } from "../lib/api";
 const payrollSeed = [];
 
 const MONTHS = [
@@ -73,10 +73,13 @@ function emptyForm() {
 }
 
 export default function Payroll() {
-  const [employees, setEmployees] = useLocalStorage(
-    "sap_staff_payroll",
-    payrollSeed,
-  );
+  const [employees, setEmployees] = useState(payrollSeed);
+  useEffect(() => {
+    api.payroll
+      .list()
+      .then(({ data }) => setEmployees(data || []))
+      .catch(() => {});
+  }, []);
   const [{ month, year }, setPeriod] = useState(payMonth());
   const [query, setQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
