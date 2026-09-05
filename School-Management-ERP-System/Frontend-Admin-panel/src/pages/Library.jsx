@@ -64,14 +64,38 @@ function emptyBookForm() {
   };
 }
 
+function normalizeBook(book) {
+  return {
+    ...book,
+    id: book._id || book.id,
+    copies: Number(book.totalCopies ?? book.copies ?? 0),
+    available: Number(book.availableCopies ?? book.available ?? 0),
+  };
+}
+
+function normalizeIssue(issue) {
+  const book =
+    issue.bookId && typeof issue.bookId === "object" ? issue.bookId : {};
+  return {
+    ...issue,
+    id: issue._id || issue.id,
+    bookId: book._id || issue.bookId,
+    title: book.title || issue.title || "Unknown book",
+    borrower: issue.borrower || issue.borrowerId || "Unknown borrower",
+    borrowerId: issue.borrowerId || "—",
+    dueOn: issue.dueDate || issue.dueOn,
+    issuedOn: issue.issueDate || issue.issuedOn,
+  };
+}
+
 export default function Library() {
   const [books, setBooks] = useState(seed);
   const [issues, setIssues] = useState(seedIssues);
   useEffect(() => {
     Promise.all([api.books.list(), api.issues.list()])
       .then(([bookResponse, issueResponse]) => {
-        setBooks(bookResponse.data || []);
-        setIssues(issueResponse.data || []);
+        setBooks((bookResponse.data || []).map(normalizeBook));
+        setIssues((issueResponse.data || []).map(normalizeIssue));
       })
       .catch(() => {});
   }, []);
@@ -139,38 +163,46 @@ export default function Library() {
     setForm({ ...b });
     setShowModal(true);
   };
-  const saveBook = () => {
+  const saveBook = async () => {
     if (!form.title.trim() || !form.author.trim()) return;
-    if (editId) {
+    const payload = {
+      title: form.title.trim(),
+      author: form.author.trim(),
+      isbn: form.isbn,
+      category: form.category,
+      totalCopies: Number(form.copies) || 1,
+      availableCopies: editId ? form.available : Number(form.copies) || 1,
+      addedOn: form.addedOn,
+    };
+    try {
+      const response = editId
+        ? await api.books.update(editId, payload)
+        : await api.books.create(payload);
+      const savedBook = normalizeBook(response.data);
       setBooks((prev) =>
-        prev.map((b) =>
-          b.id === editId ? { ...b, ...form, title: form.title.trim() } : b,
-        ),
+        editId
+          ? prev.map((book) => (book.id === editId ? savedBook : book))
+          : [savedBook, ...prev],
       );
-      toast("Book updated");
-    } else {
-      const available = form.copies;
-      setBooks((prev) => [
-        {
-          ...form,
-          id: nextId(prev, "BK-"),
-          title: form.title.trim(),
-          available,
-        },
-        ...prev,
-      ]);
-      toast("Book added to library");
+      setShowModal(false);
+      setForm(emptyBookForm());
+      setEditId(null);
+      toast(editId ? "Book updated" : "Book added to library");
+    } catch (requestError) {
+      toast(requestError.message, "error");
     }
-    setShowModal(false);
-    setForm(emptyBookForm());
-    setEditId(null);
   };
-  const deleteBook = (id) => {
-    setBooks((prev) => prev.filter((b) => b.id !== id));
-    toast("Book deleted", "error");
+  const deleteBook = async (id) => {
+    try {
+      await api.books.remove(id);
+      setBooks((prev) => prev.filter((book) => book.id !== id));
+      toast("Book deleted", "error");
+    } catch (requestError) {
+      toast(requestError.message, "error");
+    }
   };
 
-  const issueBook = () => {
+  const issueBook = async () => {
     const book = books.find((b) => b.id === issueForm.bookId);
     if (!book || !issueForm.borrower.trim()) return;
     const currentAvail = book.available ?? book.copies;
@@ -178,49 +210,58 @@ export default function Library() {
       toast("No available copies", "error");
       return;
     }
-    setBooks((prev) =>
-      prev.map((b) =>
-        b.id === book.id
-          ? { ...b, available: (b.available ?? b.copies) - 1 }
-          : b,
-      ),
-    );
-    setIssues((prev) => [
-      {
-        id: nextId(prev, "ISS-"),
+    try {
+      const response = await api.issues.issue({
         bookId: book.id,
-        title: book.title,
-        borrower: issueForm.borrower.trim(),
-        borrowerId: issueForm.borrowerId || "—",
-        studentClass: issueForm.studentClass || "—",
-        issuedOn: todayISO(),
-        dueOn: issueForm.dueOn,
-        status: "Issued",
-      },
-      ...prev,
-    ]);
-    setIssueModal(false);
-    setIssueForm({
-      bookId: books[0]?.id || "",
-      borrower: "",
-      borrowerId: "",
-      studentClass: "",
-      dueOn: inDays(14),
-    });
-    toast("Book issued successfully");
+        borrowerId: issueForm.borrowerId || issueForm.borrower.trim(),
+        borrowerType: "student",
+        dueDate: issueForm.dueOn,
+      });
+      setBooks((prev) =>
+        prev.map((entry) =>
+          entry.id === book.id
+            ? { ...entry, available: entry.available - 1 }
+            : entry,
+        ),
+      );
+      setIssues((prev) => [
+        normalizeIssue({ ...response.data, bookId: book }),
+        ...prev,
+      ]);
+      setIssueModal(false);
+      setIssueForm({
+        bookId: books[0]?.id || "",
+        borrower: "",
+        borrowerId: "",
+        studentClass: "",
+        dueOn: inDays(14),
+      });
+      toast("Book issued successfully");
+    } catch (requestError) {
+      toast(requestError.message, "error");
+    }
   };
 
-  const returnBook = (id) => {
+  const returnBook = async (id) => {
     const issue = issues.find((i) => i.id === id);
-    setBooks((prev) =>
-      prev.map((b) =>
-        b.id === issue?.bookId
-          ? { ...b, available: (b.available ?? b.copies) + 1 }
-          : b,
-      ),
-    );
-    setIssues((prev) => prev.filter((i) => i.id !== id));
-    toast("Book returned", "info");
+    try {
+      await api.issues.return(id);
+      setBooks((prev) =>
+        prev.map((book) =>
+          book.id === issue?.bookId
+            ? { ...book, available: book.available + 1 }
+            : book,
+        ),
+      );
+      setIssues((prev) =>
+        prev.map((entry) =>
+          entry.id === id ? { ...entry, status: "Returned" } : entry,
+        ),
+      );
+      toast("Book returned", "info");
+    } catch (requestError) {
+      toast(requestError.message, "error");
+    }
   };
 
   return (
