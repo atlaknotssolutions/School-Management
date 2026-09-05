@@ -34,9 +34,6 @@ import {
 } from "recharts";
 import { api } from "../lib/api";
 
-const students = [];
-const attendanceTrend = [];
-
 const CLASS_OPTIONS = [
   "Nursery",
   "LKG",
@@ -82,12 +79,71 @@ function todayLabel() {
 }
 
 export default function Attendance() {
+  const [students, setStudents] = useState([]);
+  const [attendanceTrend, setAttendanceTrend] = useState([]);
   const [cls, setCls] = useState("8");
   const [section, setSection] = useState("A");
   const [query, setQuery] = useState("");
   const [marks, setMarks] = useState({});
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const [date] = useState(todayLabel());
+
+  useEffect(() => {
+    Promise.all([api.students.list("limit=1000"), api.attendance.list()])
+      .then(([studentResponse, attendanceResponse]) => {
+        const loadedStudents = (studentResponse.data || []).map((student) => ({
+          ...student,
+          id: student._id,
+          roll: Number(student.rollNo || 0),
+          avatar: student.photoUrl,
+        }));
+        const records = attendanceResponse.data || [];
+        const grouped = new Map();
+        records.forEach((record) => {
+          const key = new Date(record.date).toISOString().slice(0, 7);
+          const current = grouped.get(key) || {
+            total: 0,
+            present: 0,
+            date: record.date,
+          };
+          current.total += 1;
+          if (record.status === "Present") current.present += 1;
+          grouped.set(key, current);
+        });
+        setStudents(loadedStudents);
+        setAttendanceTrend(
+          [...grouped.values()].map((item) => ({
+            month: new Date(item.date).toLocaleDateString("en-IN", {
+              month: "short",
+            }),
+            attendance: item.total
+              ? Math.round((item.present / item.total) * 100)
+              : 0,
+          })),
+        );
+
+        const today = new Date().toISOString().slice(0, 10);
+        const existing = {};
+        records
+          .filter(
+            (record) =>
+              new Date(record.date).toISOString().slice(0, 10) === today,
+          )
+          .forEach((record) => {
+            existing[record.studentId] =
+              record.status === "Present"
+                ? "present"
+                : record.status === "Absent"
+                  ? "absent"
+                  : record.status === "Leave"
+                    ? "leave"
+                    : "late";
+          });
+        setMarks(existing);
+      })
+      .catch((requestError) => setError(requestError.message));
+  }, []);
 
   const list = useMemo(() => {
     return students
@@ -134,22 +190,31 @@ export default function Attendance() {
   }, [list, marks]);
 
   const handleSave = async () => {
-    await api.attendance.mark(
-      list.map((student) => ({
-        studentId: student.id,
-        class: student.class,
-        section: student.section,
-        date: new Date().toISOString().slice(0, 10),
-        status: {
-          present: "Present",
-          absent: "Absent",
-          late: "Half Day",
-          leave: "Leave",
-        }[getStatus(student.id)],
-      })),
-    );
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3500);
+    if (list.length === 0) {
+      setError("No students found for this class and section.");
+      return;
+    }
+    try {
+      await api.attendance.mark(
+        list.map((student) => ({
+          studentId: student.id,
+          class: student.class,
+          section: student.section,
+          date: new Date().toISOString().slice(0, 10),
+          status: {
+            present: "Present",
+            absent: "Absent",
+            late: "Half Day",
+            leave: "Leave",
+          }[getStatus(student.id)],
+        })),
+      );
+      setError("");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3500);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
   return (
@@ -166,6 +231,7 @@ export default function Attendance() {
           </div>
         }
       />
+      {error && <p className="text-alert text-[13px]">{error}</p>}
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -64,6 +64,31 @@ function emptyForm() {
   };
 }
 
+function normalizeNotice(notice) {
+  return {
+    ...notice,
+    id: notice._id || notice.id,
+    category: notice.category || "General",
+    date: notice.expiryDate || notice.createdAt,
+    audience: Array.isArray(notice.audience)
+      ? notice.audience.join(", ")
+      : notice.audience || "All",
+    body: notice.description || notice.body || "",
+    pinned: Boolean(notice.pinned),
+  };
+}
+
+const audienceValues = {
+  All: ["all"],
+  "All Parents": ["parent"],
+  "All Staff": ["admin", "teacher"],
+  "Classes 1–5 Parents": ["parent"],
+  "Classes 6–8 Parents": ["parent"],
+  "Classes 9–12 Parents": ["parent"],
+  "Classes 3–10": ["all"],
+  "Transport Users": ["all"],
+};
+
 export default function NoticeBoard() {
   const [notices, setNotices] = useState(initialNotices);
   const [error, setError] = useState("");
@@ -76,7 +101,7 @@ export default function NoticeBoard() {
   useEffect(() => {
     api.notices
       .list()
-      .then(({ data }) => setNotices(data || []))
+      .then(({ data }) => setNotices((data || []).map(normalizeNotice)))
       .catch((e) => setError(e.message));
   }, []);
 
@@ -149,9 +174,16 @@ export default function NoticeBoard() {
     if (!form.title.trim() || !form.body.trim()) return;
     try {
       if (editId) await api.notices.remove(editId);
-      const { data } = await api.notices.create(form);
+      const { data } = await api.notices.create({
+        title: form.title.trim(),
+        description: form.body.trim(),
+        category: form.category,
+        pinned: form.pinned,
+        audience: audienceValues[form.audience] || ["all"],
+        expiryDate: form.date,
+      });
       setNotices((prev) => [
-        data,
+        normalizeNotice(data),
         ...prev.filter((notice) => (notice._id || notice.id) !== editId),
       ]);
       setShowModal(false);
@@ -168,12 +200,17 @@ export default function NoticeBoard() {
     try {
       await api.notices.remove(id);
       const { data } = await api.notices.create({
-        ...notice,
+        title: notice.title,
+        description: notice.body,
+        category: notice.category,
         pinned: !notice.pinned,
-        _id: undefined,
+        audience: audienceValues[notice.audience] || ["all"],
+        expiryDate: notice.date,
       });
       setNotices((prev) =>
-        prev.map((item) => ((item._id || item.id) === id ? data : item)),
+        prev.map((item) =>
+          (item._id || item.id) === id ? normalizeNotice(data) : item,
+        ),
       );
     } catch (e) {
       setError(e.message);
