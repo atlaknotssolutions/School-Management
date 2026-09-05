@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("erp_access_token");
@@ -79,6 +80,7 @@ export const api = {
   exams: {
     list: () => request("/exams"),
     create: (item) => request("/exams", json("POST", item)),
+    update: (id, item) => request(`/exams/${id}`, json("PUT", item)),
     remove: (id) => request(`/exams/${id}`, { method: "DELETE" }),
   },
   marks: {
@@ -109,6 +111,7 @@ export const api = {
   events: {
     list: () => request("/events"),
     create: (item) => request("/events", json("POST", item)),
+    update: (id, item) => request(`/events/${id}`, json("PUT", item)),
     remove: (id) => request(`/events/${id}`, { method: "DELETE" }),
   },
   staff: {

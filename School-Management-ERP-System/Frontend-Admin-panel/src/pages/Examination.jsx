@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   MapPin,
@@ -21,7 +21,7 @@ import {
   Pill,
   StatCard,
 } from "../components/UI";
-const initialExams = [];
+import { api } from "../lib/api";
 
 const CLASS_OPTIONS = [
   "All",
@@ -110,13 +110,33 @@ function emptyForm() {
   };
 }
 
+function normalizeExam(exam) {
+  return {
+    ...exam,
+    id: exam._id || exam.id,
+    exam: exam.examName || exam.exam || "Exam",
+    time:
+      exam.time ||
+      [exam.startTime, exam.endTime].filter(Boolean).join(" – ") ||
+      "—",
+    room: exam.room || "Room to be announced",
+  };
+}
+
 export default function Examination() {
-  const [exams, setExams] = useState(initialExams);
+  const [exams, setExams] = useState([]);
   const [cls, setCls] = useState("All");
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [editId, setEditId] = useState(null);
+
+  useEffect(() => {
+    api.exams
+      .list()
+      .then(({ data }) => setExams((data || []).map(normalizeExam)))
+      .catch(() => {});
+  }, []);
 
   const filtered = useMemo(() => {
     return exams.filter((e) => {
@@ -177,28 +197,44 @@ export default function Examination() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.date || !form.subject) return;
-
-    if (editId) {
+    const [startTime, endTime] = form.time.split(" – ");
+    const payload = {
+      examName: form.exam,
+      class: form.class,
+      subject: form.subject,
+      date: form.date,
+      startTime,
+      endTime,
+      room: form.room,
+      maxMarks: Number(form.maxMarks) || 80,
+    };
+    try {
+      const response = editId
+        ? await api.exams.update(editId, payload)
+        : await api.exams.create(payload);
+      const savedExam = normalizeExam(response.data);
       setExams((prev) =>
-        prev.map((e) => (e.id === editId ? { ...e, ...form } : e)),
+        editId
+          ? prev.map((exam) => (exam.id === editId ? savedExam : exam))
+          : [...prev, savedExam],
       );
-    } else {
-      const newExam = {
-        id: Date.now(),
-        ...form,
-        maxMarks: Number(form.maxMarks) || 80,
-      };
-      setExams((prev) => [...prev, newExam]);
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (requestError) {
+      window.alert(requestError.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
-  const handleDelete = (id) => {
-    setExams((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await api.exams.remove(id);
+      setExams((prev) => prev.filter((exam) => exam.id !== id));
+    } catch (requestError) {
+      window.alert(requestError.message);
+    }
   };
 
   return (

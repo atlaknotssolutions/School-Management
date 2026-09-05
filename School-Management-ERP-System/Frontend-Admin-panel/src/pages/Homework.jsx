@@ -84,6 +84,17 @@ function formatDate(d) {
   });
 }
 
+function normalizeHomework(item) {
+  const dueDate = item.dueDate;
+  const isOverdue = dueDate && new Date(dueDate) < new Date();
+  return {
+    ...item,
+    id: item._id || item.id,
+    teacher: item.assignedBy || item.teacher || "Assigned teacher",
+    status: item.status || (isOverdue ? "Overdue" : "Pending"),
+  };
+}
+
 function emptyForm() {
   return {
     class: "Class 8",
@@ -102,7 +113,7 @@ export default function Homework() {
   useEffect(() => {
     api.homework
       .list()
-      .then(({ data }) => setItems(data || []))
+      .then(({ data }) => setItems((data || []).map(normalizeHomework)))
       .catch(() => {});
   }, []);
   const [cls, setCls] = useState("All");
@@ -161,23 +172,32 @@ export default function Homework() {
     setShowModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.dueDate) return;
-
-    if (editId) {
+    const payload = {
+      class: form.class,
+      section: form.section,
+      subject: form.subject,
+      title: form.title.trim(),
+      assignedDate: form.assignedDate,
+      dueDate: form.dueDate,
+    };
+    try {
+      const response = editId
+        ? await api.homework.update(editId, payload)
+        : await api.homework.create(payload);
+      const savedItem = normalizeHomework(response.data);
       setItems((prev) =>
-        prev.map((h) => (h.id === editId ? { ...h, ...form } : h)),
+        editId
+          ? prev.map((item) => (item.id === editId ? savedItem : item))
+          : [savedItem, ...prev],
       );
-    } else {
-      const newItem = {
-        id: Date.now(),
-        ...form,
-      };
-      setItems((prev) => [newItem, ...prev]);
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (requestError) {
+      window.alert(requestError.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
   const changeStatus = (id, newStatus) => {

@@ -70,6 +70,18 @@ function formatDate(d) {
   });
 }
 
+function normalizeEvent(event) {
+  return {
+    ...event,
+    id: event._id || event.id,
+    category: event.category || "Other",
+    time: event.time || "—",
+    venue: event.venue || "Venue to be announced",
+    image:
+      event.image || CATEGORY_IMAGES[event.category] || CATEGORY_IMAGES.Other,
+  };
+}
+
 function emptyForm() {
   return {
     title: "",
@@ -86,7 +98,7 @@ export default function Events() {
   useEffect(() => {
     api.events
       .list()
-      .then(({ data }) => setEvents(data || []))
+      .then(({ data }) => setEvents((data || []).map(normalizeEvent)))
       .catch(() => {});
   }, []);
   const [filter, setFilter] = useState("All");
@@ -169,31 +181,47 @@ export default function Events() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.date) return;
 
     const image =
       form.image || CATEGORY_IMAGES[form.category] || CATEGORY_IMAGES.Other;
 
-    if (editId) {
-      setEvents((prev) =>
-        prev.map((e) => (e.id === editId ? { ...e, ...form, image } : e)),
-      );
-    } else {
-      const newEvent = {
-        id: Date.now(),
-        ...form,
+    try {
+      const payload = {
+        title: form.title.trim(),
+        description: form.category,
+        category: form.category,
+        time: form.time,
         image,
+        date: form.date,
+        venue: form.venue,
+        audience: ["all"],
       };
-      setEvents((prev) => [newEvent, ...prev]);
+      const response = editId
+        ? await api.events.update(editId, payload)
+        : await api.events.create(payload);
+      const savedEvent = normalizeEvent(response.data);
+      setEvents((prev) =>
+        editId
+          ? prev.map((event) => (event.id === editId ? savedEvent : event))
+          : [savedEvent, ...prev],
+      );
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (requestError) {
+      window.alert(requestError.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
-  const handleDelete = (id) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await api.events.remove(id);
+      setEvents((prev) => prev.filter((event) => event.id !== id));
+    } catch (requestError) {
+      window.alert(requestError.message);
+    }
   };
 
   return (

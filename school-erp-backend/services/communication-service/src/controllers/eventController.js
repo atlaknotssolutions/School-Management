@@ -19,6 +19,22 @@ const getEvents = async (req, res) => {
   }
 };
 
+const updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!event)
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found" });
+    res.json({ success: true, data: event });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 const deleteEvent = async (req, res) => {
   try {
     await Event.findByIdAndDelete(req.params.id);
@@ -28,4 +44,4 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-module.exports = { createEvent, getEvents, deleteEvent };
+module.exports = { createEvent, getEvents, updateEvent, deleteEvent };

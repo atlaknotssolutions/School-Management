@@ -5,11 +5,12 @@ const inventorySchema = new mongoose.Schema(
     itemName: { type: String, required: true },
     category: { type: String },
     quantity: { type: Number, required: true },
+    reorderLevel: { type: Number, default: 0 },
     unit: { type: String, default: "pcs" },
     supplier: { type: String },
     purchaseDate: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("InventoryItem", inventorySchema);

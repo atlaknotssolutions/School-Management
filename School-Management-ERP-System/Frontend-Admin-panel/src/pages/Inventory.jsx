@@ -54,6 +54,17 @@ function emptyForm() {
   };
 }
 
+function normalizeItem(item) {
+  return {
+    ...item,
+    id: item._id || item.id,
+    item: item.itemName || item.item || "Unnamed item",
+    stock: Number(item.quantity ?? item.stock ?? 0),
+    reorderLevel: Number(item.reorderLevel ?? 0),
+    lastRestocked: item.purchaseDate || item.lastRestocked || todayISO(),
+  };
+}
+
 function nextId(current) {
   const max = current.reduce((m, i) => {
     const num = parseInt(i.id.replace(/\D/g, ""), 10);
@@ -67,7 +78,7 @@ export default function Inventory() {
   useEffect(() => {
     api.inventory
       .list()
-      .then(({ data }) => setItems(data || []))
+      .then(({ data }) => setItems((data || []).map(normalizeItem)))
       .catch(() => {});
   }, []);
   const [query, setQuery] = useState("");
@@ -130,42 +141,62 @@ export default function Inventory() {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.item.trim()) return;
-
-    if (editId) {
+    const payload = {
+      itemName: form.item.trim(),
+      category: form.category,
+      quantity: Number(form.stock) || 0,
+      reorderLevel: Number(form.reorderLevel) || 0,
+      unit: form.unit,
+      purchaseDate: form.lastRestocked,
+    };
+    try {
+      const response = editId
+        ? await api.inventory.update(editId, payload)
+        : await api.inventory.create(payload);
+      const savedItem = normalizeItem(response.data);
       setItems((prev) =>
-        prev.map((i) => (i.id === editId ? { ...i, ...form } : i)),
+        editId
+          ? prev.map((item) => (item.id === editId ? savedItem : item))
+          : [...prev, savedItem],
       );
-    } else {
-      const newItem = {
-        ...form,
-        id: nextId(items),
-        item: form.item.trim(),
-      };
-      setItems((prev) => [...prev, newItem]);
+      setShowModal(false);
+      setForm(emptyForm());
+      setEditId(null);
+    } catch (requestError) {
+      window.alert(requestError.message);
     }
-    setShowModal(false);
-    setForm(emptyForm());
-    setEditId(null);
   };
 
-  const handleDelete = (id) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await api.inventory.remove(id);
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (requestError) {
+      window.alert(requestError.message);
+    }
   };
 
-  const restock = (id, qty) => {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === id
-          ? {
-              ...i,
-              stock: Math.max(0, i.stock + qty),
-              lastRestocked: todayISO(),
-            }
-          : i,
-      ),
-    );
+  const restock = async (id, qty) => {
+    const item = items.find((entry) => entry.id === id);
+    if (!item) return;
+    try {
+      const response = await api.inventory.update(id, {
+        itemName: item.item,
+        category: item.category,
+        quantity: Math.max(0, item.stock + qty),
+        reorderLevel: item.reorderLevel,
+        unit: item.unit,
+        purchaseDate: todayISO(),
+      });
+      const updated = normalizeItem(response.data);
+      setItems((prev) =>
+        prev.map((entry) => (entry.id === id ? updated : entry)),
+      );
+    } catch (requestError) {
+      window.alert(requestError.message);
+    }
   };
 
   return (
