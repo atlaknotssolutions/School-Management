@@ -1,11 +1,32 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard, CalendarCheck, UserPlus, MessageSquare, Bell, BookOpenCheck,
-  PartyPopper, CalendarDays, Users, ClipboardList, Wallet, FileBarChart2,
-  BarChart3, Boxes, Bus, CreditCard, GraduationCap, X, ScrollText,
-  BookOpen, BedDouble, Banknote
+  LayoutDashboard,
+  CalendarCheck,
+  UserPlus,
+  MessageSquare,
+  Bell,
+  BookOpenCheck,
+  PartyPopper,
+  CalendarDays,
+  Users,
+  ClipboardList,
+  Wallet,
+  FileBarChart2,
+  BarChart3,
+  Boxes,
+  Bus,
+  CreditCard,
+  GraduationCap,
+  X,
+  ScrollText,
+  BookOpen,
+  BedDouble,
+  Banknote,
 } from "lucide-react";
-import { school } from "../data/school";
+const school = {
+  shortName: "School ERP",
+  session: String(new Date().getFullYear()),
+};
 
 const groups = [
   {
@@ -65,7 +86,10 @@ export default function Sidebar({ open, onClose }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={onClose}
+        />
       )}
       <aside
         className={`fixed lg:static z-40 top-0 left-0 h-full w-72 bg-ink text-white flex flex-col
@@ -78,11 +102,18 @@ export default function Sidebar({ open, onClose }) {
               <GraduationCap size={20} strokeWidth={2.5} />
             </div>
             <div className="leading-tight">
-              <p className="font-display font-bold text-[15px] tracking-tight">{school.shortName}</p>
-              <p className="text-[11px] text-white/50">ERP · {school.session}</p>
+              <p className="font-display font-bold text-[15px] tracking-tight">
+                {school.shortName}
+              </p>
+              <p className="text-[11px] text-white/50">
+                ERP · {school.session}
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="lg:hidden text-white/60 hover:text-white">
+          <button
+            onClick={onClose}
+            className="lg:hidden text-white/60 hover:text-white"
+          >
             <X size={20} />
           </button>
         </div>
@@ -119,8 +150,12 @@ export default function Sidebar({ open, onClose }) {
 
         <div className="p-4 border-t border-white/10 shrink-0">
           <div className="rounded-xl bg-white/5 p-3.5">
-            <p className="text-[12.5px] font-semibold text-white/90">Need help?</p>
-            <p className="text-[11.5px] text-white/50 mt-0.5 leading-relaxed">Visit the admin support desk or call the IT helpdesk at ext. 204.</p>
+            <p className="text-[12.5px] font-semibold text-white/90">
+              Need help?
+            </p>
+            <p className="text-[11.5px] text-white/50 mt-0.5 leading-relaxed">
+              Visit the admin support desk or call the IT helpdesk at ext. 204.
+            </p>
           </div>
         </div>
       </aside>

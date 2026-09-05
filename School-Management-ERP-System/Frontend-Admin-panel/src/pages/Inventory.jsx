@@ -1,14 +1,39 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {
-  Plus, Boxes, AlertTriangle, PackageCheck, X, Save, Search,
-  Pencil, Trash2, Minus, ArrowUpRight, PackagePlus
+  Plus,
+  Boxes,
+  AlertTriangle,
+  PackageCheck,
+  X,
+  Save,
+  Search,
+  Pencil,
+  Trash2,
+  Minus,
+  ArrowUpRight,
+  PackagePlus,
 } from "lucide-react";
-import { PageIntro, Card, Button, Input, Select, Pill, StatCard } from "../components/UI";
-import { inventory as initialInventory } from "../data/academics";
+import {
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  StatCard,
+} from "../components/UI";
+const initialInventory = [];
 
 const CATEGORIES = [
-  "Books", "Lab Equipment", "Sports", "Stationery", "IT Equipment", "Medical", "Furniture", "Other"
+  "Books",
+  "Lab Equipment",
+  "Sports",
+  "Stationery",
+  "IT Equipment",
+  "Medical",
+  "Furniture",
+  "Other",
 ];
 const UNITS = ["Pieces", "Sets", "Boxes", "Units", "Reams", "Kits", "Pairs"];
 
@@ -47,13 +72,14 @@ export default function Inventory() {
 
   const cats = useMemo(
     () => ["All", ...new Set(items.map((i) => i.category))],
-    [items]
+    [items],
   );
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return items.filter((i) => {
-      const matchCat = categoryFilter === "All" || i.category === categoryFilter;
+      const matchCat =
+        categoryFilter === "All" || i.category === categoryFilter;
       const matchQuery =
         !q ||
         i.item.toLowerCase().includes(q) ||
@@ -103,7 +129,7 @@ export default function Inventory() {
 
     if (editId) {
       setItems((prev) =>
-        prev.map((i) => (i.id === editId ? { ...i, ...form } : i))
+        prev.map((i) => (i.id === editId ? { ...i, ...form } : i)),
       );
     } else {
       const newItem = {
@@ -126,9 +152,13 @@ export default function Inventory() {
     setItems((prev) =>
       prev.map((i) =>
         i.id === id
-          ? { ...i, stock: Math.max(0, i.stock + qty), lastRestocked: todayISO() }
-          : i
-      )
+          ? {
+              ...i,
+              stock: Math.max(0, i.stock + qty),
+              lastRestocked: todayISO(),
+            }
+          : i,
+      ),
     );
   };
 
@@ -146,10 +176,34 @@ export default function Inventory() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Boxes} label="Total Items Tracked" value={String(stats.total)} sub="All categories" accent="amber" />
-        <StatCard icon={AlertTriangle} label="Below Reorder Level" value={String(stats.low)} sub="Needs restocking" accent="alert" />
-        <StatCard icon={PackageCheck} label="Categories" value={String(stats.categories)} sub="Active types" accent="info" />
-        <StatCard icon={PackagePlus} label="Total Units" value={String(stats.units)} sub="Across all items" accent="success" />
+        <StatCard
+          icon={Boxes}
+          label="Total Items Tracked"
+          value={String(stats.total)}
+          sub="All categories"
+          accent="amber"
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Below Reorder Level"
+          value={String(stats.low)}
+          sub="Needs restocking"
+          accent="alert"
+        />
+        <StatCard
+          icon={PackageCheck}
+          label="Categories"
+          value={String(stats.categories)}
+          sub="Active types"
+          accent="info"
+        />
+        <StatCard
+          icon={PackagePlus}
+          label="Total Units"
+          value={String(stats.units)}
+          sub="Across all items"
+          accent="success"
+        />
       </div>
 
       <Card
@@ -157,7 +211,10 @@ export default function Inventory() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search item..."
                 value={query}
@@ -165,9 +222,15 @@ export default function Inventory() {
                 className="pl-8 w-48"
               />
             </div>
-            <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="min-w-[150px]">
+            <Select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="min-w-[150px]"
+            >
               {cats.map((c) => (
-                <option key={c} value={c}>{c === "All" ? "All Categories" : c}</option>
+                <option key={c} value={c}>
+                  {c === "All" ? "All Categories" : c}
+                </option>
               ))}
             </Select>
           </div>
@@ -201,26 +264,47 @@ export default function Inventory() {
               <tbody>
                 {filtered.map((i) => {
                   const lowStock = i.stock < i.reorderLevel;
-                  const pct = Math.min(100, Math.round((i.stock / (i.reorderLevel * 2)) * 100));
+                  const pct = Math.min(
+                    100,
+                    Math.round((i.stock / (i.reorderLevel * 2)) * 100),
+                  );
                   return (
-                    <tr key={i.id} className="border-b border-black/[0.04] hover:bg-paper/60">
+                    <tr
+                      key={i.id}
+                      className="border-b border-black/[0.04] hover:bg-paper/60"
+                    >
                       <td className="px-5 py-3">
                         <p className="font-semibold text-ink">{i.item}</p>
-                        <p className="text-[11.5px] text-slate-text/50 font-mono">{i.id}</p>
+                        <p className="text-[11.5px] text-slate-text/50 font-mono">
+                          {i.id}
+                        </p>
                       </td>
-                      <td className="px-5 py-3 text-slate-text">{i.category}</td>
+                      <td className="px-5 py-3 text-slate-text">
+                        {i.category}
+                      </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
-                            <div className={`h-full rounded-full ${lowStock ? "bg-alert" : "bg-success"}`} style={{ width: `${pct}%` }} />
+                            <div
+                              className={`h-full rounded-full ${lowStock ? "bg-alert" : "bg-success"}`}
+                              style={{ width: `${pct}%` }}
+                            />
                           </div>
-                          <span className="text-slate-text text-[12px]">{i.stock} {i.unit}</span>
+                          <span className="text-slate-text text-[12px]">
+                            {i.stock} {i.unit}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-slate-text">{i.reorderLevel} {i.unit}</td>
-                      <td className="px-5 py-3 text-slate-text whitespace-nowrap">{i.lastRestocked}</td>
+                      <td className="px-5 py-3 text-slate-text">
+                        {i.reorderLevel} {i.unit}
+                      </td>
+                      <td className="px-5 py-3 text-slate-text whitespace-nowrap">
+                        {i.lastRestocked}
+                      </td>
                       <td className="px-5 py-3">
-                        <Pill tone={lowStock ? "alert" : "success"}>{lowStock ? "Reorder Now" : "In Stock"}</Pill>
+                        <Pill tone={lowStock ? "alert" : "success"}>
+                          {lowStock ? "Reorder Now" : "In Stock"}
+                        </Pill>
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1">
@@ -277,7 +361,9 @@ export default function Inventory() {
                   {editId ? "Edit Item" : "Add Item"}
                 </h3>
                 <p className="text-[12.5px] text-slate-text/70 mt-0.5">
-                  {editId ? "Update item details." : "Add a new inventory item."}
+                  {editId
+                    ? "Update item details."
+                    : "Add a new inventory item."}
                 </p>
               </div>
               <button
@@ -301,45 +387,69 @@ export default function Inventory() {
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Category</label>
-                <Select value={form.category} onChange={(e) => updateForm("category", e.target.value)}>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Category
+                </label>
+                <Select
+                  value={form.category}
+                  onChange={(e) => updateForm("category", e.target.value)}
+                >
                   {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </Select>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Stock</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Stock
+                  </label>
                   <Input
                     type="number"
                     min={0}
                     value={form.stock}
-                    onChange={(e) => updateForm("stock", Number(e.target.value))}
+                    onChange={(e) =>
+                      updateForm("stock", Number(e.target.value))
+                    }
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Reorder Level</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Reorder Level
+                  </label>
                   <Input
                     type="number"
                     min={0}
                     value={form.reorderLevel}
-                    onChange={(e) => updateForm("reorderLevel", Number(e.target.value))}
+                    onChange={(e) =>
+                      updateForm("reorderLevel", Number(e.target.value))
+                    }
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Unit</label>
-                  <Select value={form.unit} onChange={(e) => updateForm("unit", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Unit
+                  </label>
+                  <Select
+                    value={form.unit}
+                    onChange={(e) => updateForm("unit", e.target.value)}
+                  >
                     {UNITS.map((u) => (
-                      <option key={u} value={u}>{u}</option>
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Last Restocked</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Last Restocked
+                </label>
                 <Input
                   type="date"
                   value={form.lastRestocked}

@@ -1,33 +1,74 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {
-  Plus, BookOpenCheck, Search, Calendar, User, X, Save,
-  CheckCircle2, Clock, AlertCircle, Filter
+  Plus,
+  BookOpenCheck,
+  Search,
+  Calendar,
+  User,
+  X,
+  Save,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Filter,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Select, Input, Pill, StatCard, statusTone
+  PageIntro,
+  Card,
+  Button,
+  Select,
+  Input,
+  Pill,
+  StatCard,
+  statusTone,
 } from "../components/UI";
-import { homework as initialHomework } from "../data/records";
+const initialHomework = [];
 
 const CLASS_OPTIONS = [
   "All",
-  "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
-  "Class 11 (Science)", "Class 11 (Commerce)", "Class 12 (Science)", "Class 12 (Commerce)"
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11 (Science)",
+  "Class 11 (Commerce)",
+  "Class 12 (Science)",
+  "Class 12 (Commerce)",
 ];
 
 const SECTION_OPTIONS = ["A", "B", "C"];
 
 const SUBJECT_OPTIONS = [
-  "Mathematics", "English", "Science", "Hindi", "Social Science",
-  "Computer Science", "Physics", "Chemistry", "Biology",
-  "Accountancy", "Business Studies", "Economics", "Art", "Physical Education"
+  "Mathematics",
+  "English",
+  "Science",
+  "Hindi",
+  "Social Science",
+  "Computer Science",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Accountancy",
+  "Business Studies",
+  "Economics",
+  "Art",
+  "Physical Education",
 ];
 
 const STATUS_OPTIONS = ["All", "Pending", "Submitted", "Graded", "Overdue"];
 
 const TEACHER_OPTIONS = [
-  "Kavita Joshi", "Pooja Reddy", "Ritu Sharma", "Ramesh Iyer",
-  "Manish Gupta", "Suresh Kulkarni", "Priya Nair", "Anjali Verma"
+  "Kavita Joshi",
+  "Pooja Reddy",
+  "Ritu Sharma",
+  "Ramesh Iyer",
+  "Manish Gupta",
+  "Suresh Kulkarni",
+  "Priya Nair",
+  "Anjali Verma",
 ];
 
 function todayISO() {
@@ -37,7 +78,9 @@ function todayISO() {
 function formatDate(d) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -78,7 +121,13 @@ export default function Homework() {
   }, [items, cls, statusFilter, query]);
 
   const counts = useMemo(() => {
-    const c = { total: items.length, Pending: 0, Submitted: 0, Graded: 0, Overdue: 0 };
+    const c = {
+      total: items.length,
+      Pending: 0,
+      Submitted: 0,
+      Graded: 0,
+      Overdue: 0,
+    };
     items.forEach((h) => {
       if (c[h.status] !== undefined) c[h.status]++;
     });
@@ -111,11 +160,7 @@ export default function Homework() {
 
     if (editId) {
       setItems((prev) =>
-        prev.map((h) =>
-          h.id === editId
-            ? { ...h, ...form }
-            : h
-        )
+        prev.map((h) => (h.id === editId ? { ...h, ...form } : h)),
       );
     } else {
       const newItem = {
@@ -131,7 +176,7 @@ export default function Homework() {
 
   const changeStatus = (id, newStatus) => {
     setItems((prev) =>
-      prev.map((h) => (h.id === id ? { ...h, status: newStatus } : h))
+      prev.map((h) => (h.id === id ? { ...h, status: newStatus } : h)),
     );
   };
 
@@ -190,7 +235,10 @@ export default function Homework() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search title, subject, teacher..."
                 value={query}
@@ -198,14 +246,26 @@ export default function Homework() {
                 className="pl-8 w-52"
               />
             </div>
-            <Select value={cls} onChange={(e) => setCls(e.target.value)} className="min-w-[130px]">
+            <Select
+              value={cls}
+              onChange={(e) => setCls(e.target.value)}
+              className="min-w-[130px]"
+            >
               {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c === "All" ? "All Classes" : c}</option>
+                <option key={c} value={c}>
+                  {c === "All" ? "All Classes" : c}
+                </option>
               ))}
             </Select>
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-w-[120px]">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="min-w-[120px]"
+            >
               {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>
+                <option key={s} value={s}>
+                  {s === "All" ? "All Status" : s}
+                </option>
               ))}
             </Select>
           </div>
@@ -213,8 +273,13 @@ export default function Homework() {
       >
         {filtered.length === 0 ? (
           <div className="py-14 text-center">
-            <BookOpenCheck size={36} className="mx-auto text-slate-text/30 mb-3" />
-            <p className="text-[14px] font-medium text-ink">No homework found</p>
+            <BookOpenCheck
+              size={36}
+              className="mx-auto text-slate-text/30 mb-3"
+            />
+            <p className="text-[14px] font-medium text-ink">
+              No homework found
+            </p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try changing filters or assign a new homework.
             </p>
@@ -235,19 +300,24 @@ export default function Homework() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[14px] font-semibold text-ink">{h.subject}</p>
+                    <p className="text-[14px] font-semibold text-ink">
+                      {h.subject}
+                    </p>
                     <span className="text-[12px] text-slate-text/55">
                       {h.class} · Sec {h.section}
                     </span>
                     <Pill tone={statusTone(h.status)}>{h.status}</Pill>
                   </div>
-                  <p className="text-[13.5px] text-ink/90 mt-1 leading-snug">{h.title}</p>
+                  <p className="text-[13.5px] text-ink/90 mt-1 leading-snug">
+                    {h.title}
+                  </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[12px] text-slate-text/65">
                     <span className="inline-flex items-center gap-1">
                       <User size={12} /> {h.teacher}
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <Calendar size={12} /> Assigned {formatDate(h.assignedDate)}
+                      <Calendar size={12} /> Assigned{" "}
+                      {formatDate(h.assignedDate)}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Clock size={12} /> Due {formatDate(h.dueDate)}
@@ -282,7 +352,10 @@ export default function Homework() {
       {/* ========== ASSIGN / EDIT MODAL ========== */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div
+            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
@@ -306,43 +379,57 @@ export default function Homework() {
             <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Class</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Class
+                  </label>
                   <Select
                     value={form.class}
                     onChange={(e) => updateForm("class", e.target.value)}
                   >
                     {CLASS_OPTIONS.filter((c) => c !== "All").map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Section</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Section
+                  </label>
                   <Select
                     value={form.section}
                     onChange={(e) => updateForm("section", e.target.value)}
                   >
                     {SECTION_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Subject</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Subject
+                </label>
                 <Select
                   value={form.subject}
                   onChange={(e) => updateForm("subject", e.target.value)}
                 >
                   {SUBJECT_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
                   ))}
                 </Select>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Title / Description</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Title / Description
+                </label>
                 <Input
                   placeholder="e.g. Chapter 5 — Linear Equations, Q1–15"
                   value={form.title}
@@ -351,20 +438,26 @@ export default function Homework() {
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Teacher</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Teacher
+                </label>
                 <Select
                   value={form.teacher}
                   onChange={(e) => updateForm("teacher", e.target.value)}
                 >
                   {TEACHER_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Assigned Date</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Assigned Date
+                  </label>
                   <Input
                     type="date"
                     value={form.assignedDate}
@@ -372,7 +465,9 @@ export default function Homework() {
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Due Date</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Due Date
+                  </label>
                   <Input
                     type="date"
                     value={form.dueDate}
@@ -382,7 +477,9 @@ export default function Homework() {
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Status</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Status
+                </label>
                 <Select
                   value={form.status}
                   onChange={(e) => updateForm("status", e.target.value)}
@@ -415,11 +512,9 @@ export default function Homework() {
   );
 }
 
-
 // import { useState } from "react";
 // import { Plus, BookOpenCheck } from "lucide-react";
 // import { PageIntro, Card, Button, Pill, statusTone, Select } from "../components/UI";
-// import { homework } from "../data/records";
 
 // export default function Homework() {
 //   const [cls, setCls] = useState("All");

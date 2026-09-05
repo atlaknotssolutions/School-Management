@@ -1,12 +1,22 @@
 import { useMemo, useState } from "react";
 import { Printer, Download, Search } from "lucide-react";
 import { PageIntro, Card, Button, Select, Input, Pill } from "../components/UI";
-import { students } from "../data/students";
-import { school } from "../data/school";
+const students = [];
+const school = {
+  name: "School Management ERP",
+  address: "",
+  affiliation: "",
+  session: String(new Date().getFullYear()),
+  logo: "S",
+};
 
 const SUBJECTS = [
-  "English", "Hindi", "Mathematics", "Science",
-  "Social Science", "Computer Science"
+  "English",
+  "Hindi",
+  "Mathematics",
+  "Science",
+  "Social Science",
+  "Computer Science",
 ];
 
 // Deterministic fake marks per student + subject (static demo)
@@ -34,31 +44,38 @@ function getGrade(pct) {
 function getRemark(pct) {
   if (pct >= 90) return "Outstanding performance. Keep up the excellent work!";
   if (pct >= 80) return "Very good performance. Continue the hard work.";
-  if (pct >= 70) return "Good performance. Focus on weaker subjects for better results.";
-  if (pct >= 60) return "Satisfactory. Needs more regular practice and revision.";
+  if (pct >= 70)
+    return "Good performance. Focus on weaker subjects for better results.";
+  if (pct >= 60)
+    return "Satisfactory. Needs more regular practice and revision.";
   return "Needs significant improvement. Extra attention and support recommended.";
 }
 
 function formatClass(c) {
   if (["Nursery", "LKG", "UKG"].includes(c)) return c;
-  if (String(c).startsWith("11") || String(c).startsWith("12")) return `Class ${c}`;
+  if (String(c).startsWith("11") || String(c).startsWith("12"))
+    return `Class ${c}`;
   return `Class ${c}`;
 }
 
 export default function ReportCard() {
-  const [selectedId, setSelectedId] = useState(students[3]?.id || students[0]?.id);
+  const [selectedId, setSelectedId] = useState(
+    students[3]?.id || students[0]?.id,
+  );
   const [term, setTerm] = useState("Term 2");
   const [query, setQuery] = useState("");
 
   const filteredStudents = useMemo(() => {
     if (!query.trim()) return students.slice(0, 40);
     const q = query.toLowerCase();
-    return students.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q) ||
-        String(s.roll).includes(q)
-    ).slice(0, 40);
+    return students
+      .filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.id.toLowerCase().includes(q) ||
+          String(s.roll).includes(q),
+      )
+      .slice(0, 40);
   }, [query]);
 
   const student = students.find((s) => s.id === selectedId) || students[0];
@@ -103,7 +120,10 @@ export default function ReportCard() {
       <Card className="no-print" title="Select Student">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+            />
             <Input
               placeholder="Search by name, ID or roll..."
               value={query}
@@ -122,7 +142,11 @@ export default function ReportCard() {
               </option>
             ))}
           </Select>
-          <Select value={term} onChange={(e) => setTerm(e.target.value)} className="min-w-[130px]">
+          <Select
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            className="min-w-[130px]"
+          >
             <option value="Term 1">Term 1</option>
             <option value="Term 2">Term 2</option>
             <option value="Final">Final</option>
@@ -139,13 +163,19 @@ export default function ReportCard() {
             <h2 className="font-display text-2xl font-bold text-ink mt-2 tracking-tight">
               {school.name}
             </h2>
-            <p className="text-[12.5px] text-slate-text mt-1">{school.address}</p>
-            <p className="text-[11.5px] text-slate-text/70">{school.affiliation}</p>
+            <p className="text-[12.5px] text-slate-text mt-1">
+              {school.address}
+            </p>
+            <p className="text-[11.5px] text-slate-text/70">
+              {school.affiliation}
+            </p>
             <div className="mt-3 inline-flex items-center gap-2">
               <span className="font-display font-semibold text-amber-dark text-[14px]">
                 {term.toUpperCase()} — PROGRESS REPORT
               </span>
-              <span className="text-[12.5px] text-slate-text/60">· {school.session}</span>
+              <span className="text-[12.5px] text-slate-text/60">
+                · {school.session}
+              </span>
             </div>
           </div>
 
@@ -192,8 +222,12 @@ export default function ReportCard() {
               <thead>
                 <tr className="bg-ink text-white text-left text-[11.5px] uppercase tracking-wide">
                   <th className="px-4 py-3 font-semibold">Subject</th>
-                  <th className="px-4 py-3 font-semibold text-center">Max Marks</th>
-                  <th className="px-4 py-3 font-semibold text-center">Marks Obtained</th>
+                  <th className="px-4 py-3 font-semibold text-center">
+                    Max Marks
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-center">
+                    Marks Obtained
+                  </th>
                   <th className="px-4 py-3 font-semibold text-center">Grade</th>
                 </tr>
               </thead>
@@ -203,9 +237,15 @@ export default function ReportCard() {
                     key={r.subject}
                     className={idx % 2 === 0 ? "bg-white" : "bg-paper/60"}
                   >
-                    <td className="px-4 py-2.5 font-semibold text-ink">{r.subject}</td>
-                    <td className="px-4 py-2.5 text-center text-slate-text">{r.max}</td>
-                    <td className="px-4 py-2.5 text-center font-semibold text-ink">{r.marks}</td>
+                    <td className="px-4 py-2.5 font-semibold text-ink">
+                      {r.subject}
+                    </td>
+                    <td className="px-4 py-2.5 text-center text-slate-text">
+                      {r.max}
+                    </td>
+                    <td className="px-4 py-2.5 text-center font-semibold text-ink">
+                      {r.marks}
+                    </td>
                     <td className="px-4 py-2.5 text-center">
                       <span className="inline-flex items-center justify-center min-w-[36px] px-2 py-0.5 rounded-md bg-ink/8 text-ink text-[12px] font-bold">
                         {r.grade}
@@ -230,19 +270,33 @@ export default function ReportCard() {
           {/* Summary boxes */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="rounded-xl border border-black/[0.08] p-3.5 text-center">
-              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">Percentage</p>
-              <p className="font-display text-2xl font-bold text-ink mt-1">{pct}%</p>
+              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">
+                Percentage
+              </p>
+              <p className="font-display text-2xl font-bold text-ink mt-1">
+                {pct}%
+              </p>
             </div>
             <div className="rounded-xl border border-black/[0.08] p-3.5 text-center">
-              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">Overall Grade</p>
-              <p className="font-display text-2xl font-bold text-amber-dark mt-1">{overallGrade}</p>
+              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">
+                Overall Grade
+              </p>
+              <p className="font-display text-2xl font-bold text-amber-dark mt-1">
+                {overallGrade}
+              </p>
             </div>
             <div className="rounded-xl border border-black/[0.08] p-3.5 text-center">
-              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">Attendance</p>
-              <p className="font-display text-2xl font-bold text-success mt-1">{attendancePct}%</p>
+              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">
+                Attendance
+              </p>
+              <p className="font-display text-2xl font-bold text-success mt-1">
+                {attendancePct}%
+              </p>
             </div>
             <div className="rounded-xl border border-black/[0.08] p-3.5 text-center">
-              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">Result</p>
+              <p className="text-[11px] text-slate-text/60 uppercase tracking-wide font-semibold">
+                Result
+              </p>
               <p className="font-display text-lg font-bold text-success mt-1.5">
                 {Number(pct) >= 33 ? "PASS" : "FAIL"}
               </p>
@@ -262,7 +316,9 @@ export default function ReportCard() {
             <div className="text-center">
               <div className="h-12 mb-2" />
               <div className="border-t border-black/20 pt-2">
-                <p className="text-[12px] font-semibold text-ink">Class Teacher</p>
+                <p className="text-[12px] font-semibold text-ink">
+                  Class Teacher
+                </p>
               </div>
             </div>
             <div className="text-center">
@@ -274,7 +330,9 @@ export default function ReportCard() {
             <div className="text-center">
               <div className="h-12 mb-2" />
               <div className="border-t border-black/20 pt-2">
-                <p className="text-[12px] font-semibold text-ink">Parent / Guardian</p>
+                <p className="text-[12px] font-semibold text-ink">
+                  Parent / Guardian
+                </p>
               </div>
             </div>
           </div>
@@ -288,12 +346,8 @@ export default function ReportCard() {
   );
 }
 
-
 // import { Printer, Download } from "lucide-react";
 // import { PageIntro, Card, Button, Select } from "../components/UI";
-// import { subjectResults } from "../data/academics";
-// import { students } from "../data/students";
-// import { school } from "../data/school";
 
 // export default function ReportCard() {
 //   const student = students[3];

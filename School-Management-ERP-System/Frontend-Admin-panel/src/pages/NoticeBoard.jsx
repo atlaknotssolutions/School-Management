@@ -1,15 +1,25 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { Pin, Plus, X, Save, Pencil, Bell, Search, PinOff } from "lucide-react";
 import {
-  Pin, Plus, X, Save, Pencil, Bell, Search, PinOff
-} from "lucide-react";
-import {
-  PageIntro, Card, Button, Input, Select, Pill, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  StatCard,
 } from "../components/UI";
 import { notices as initialNotices } from "../data/records";
 
 const CATEGORIES = [
-  "Academic", "Holiday", "Sports", "Fees", "Event", "Transport", "General"
+  "Academic",
+  "Holiday",
+  "Sports",
+  "Fees",
+  "Event",
+  "Transport",
+  "General",
 ];
 
 const AUDIENCE_OPTIONS = [
@@ -36,7 +46,9 @@ const categoryTone = {
 function formatDate(d) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -61,7 +73,7 @@ export default function NoticeBoard() {
 
   const cats = useMemo(
     () => ["All", ...new Set(notices.map((n) => n.category))],
-    [notices]
+    [notices],
   );
 
   const filtered = useMemo(() => {
@@ -89,7 +101,9 @@ export default function NoticeBoard() {
     const thisMonth = notices.filter((n) => {
       const d = new Date(n.date);
       const now = new Date();
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return (
+        d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      );
     }).length;
     return {
       total: notices.length,
@@ -127,7 +141,7 @@ export default function NoticeBoard() {
 
     if (editId) {
       setNotices((prev) =>
-        prev.map((n) => (n.id === editId ? { ...n, ...form } : n))
+        prev.map((n) => (n.id === editId ? { ...n, ...form } : n)),
       );
     } else {
       const newNotice = {
@@ -143,7 +157,7 @@ export default function NoticeBoard() {
 
   const togglePin = (id) => {
     setNotices((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n))
+      prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)),
     );
   };
 
@@ -199,7 +213,10 @@ export default function NoticeBoard() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+          />
           <Input
             placeholder="Search notices..."
             value={query}
@@ -333,7 +350,9 @@ export default function NoticeBoard() {
                     onChange={(e) => updateForm("category", e.target.value)}
                   >
                     {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
@@ -358,7 +377,9 @@ export default function NoticeBoard() {
                   onChange={(e) => updateForm("audience", e.target.value)}
                 >
                   {AUDIENCE_OPTIONS.map((a) => (
-                    <option key={a} value={a}>{a}</option>
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
                   ))}
                 </Select>
               </div>
@@ -424,12 +445,9 @@ export default function NoticeBoard() {
   );
 }
 
-
-
 // import { useState } from "react";
 // import { Pin, Plus } from "lucide-react";
 // import { PageIntro, Card, Button, Pill } from "../components/UI";
-// import { notices } from "../data/records";
 
 // const categoryTone = { Academic: "info", Holiday: "success", Sports: "amber", Fees: "alert", Event: "info", Transport: "neutral" };
 

@@ -1,19 +1,53 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {
-  Plus, Wallet, TrendingUp, AlertTriangle, Receipt, X, Save,
-  Search, Pencil, Trash2
+  Plus,
+  Wallet,
+  TrendingUp,
+  AlertTriangle,
+  Receipt,
+  X,
+  Save,
+  Search,
+  Pencil,
+  Trash2,
 } from "lucide-react";
-import { PageIntro, Card, Button, Input, Select, Pill, statusTone, StatCard } from "../components/UI";
-import { feeStructure, feeTransactions as initialTransactions } from "../data/academics";
+import {
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  statusTone,
+  StatCard,
+} from "../components/UI";
+const feeStructure = [];
+const initialTransactions = [];
 
-const MODES = ["Online — UPI", "Online — Card", "Online — Net Banking", "Cash", "Cheque", "Bank Transfer"];
+const MODES = [
+  "Online — UPI",
+  "Online — Card",
+  "Online — Net Banking",
+  "Cash",
+  "Cheque",
+  "Bank Transfer",
+];
 const STATUSES = ["All", "Success", "Pending Clearance", "Overdue"];
 const TERMS = ["Term 1", "Term 2"];
 const CLASSES = [
-  "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
-  "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
-  "Class 11", "Class 12"
+  "Class 1",
+  "Class 2",
+  "Class 3",
+  "Class 4",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11",
+  "Class 12",
 ];
 
 function todayISO() {
@@ -38,7 +72,10 @@ function emptyForm() {
 }
 
 export default function FeesCollection() {
-  const [transactions, setTransactions] = useLocalStorage("sap_fee_transactions", initialTransactions);
+  const [transactions, setTransactions] = useLocalStorage(
+    "sap_fee_transactions",
+    initialTransactions,
+  );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
@@ -47,7 +84,7 @@ export default function FeesCollection() {
 
   const totalTerm = useMemo(
     () => feeStructure.reduce((a, f) => a + f.termAmount, 0),
-    []
+    [],
   );
 
   const filtered = useMemo(() => {
@@ -66,11 +103,13 @@ export default function FeesCollection() {
 
   const stats = useMemo(() => {
     const successful = transactions.filter(
-      (t) => t.status === "Success" && t.amount > 0
+      (t) => t.status === "Success" && t.amount > 0,
     );
     const collected = successful.reduce((a, t) => a + t.amount, 0);
     const overdue = transactions.filter((t) => t.status === "Overdue").length;
-    const pendingClearance = transactions.filter((t) => t.status === "Pending Clearance").length;
+    const pendingClearance = transactions.filter(
+      (t) => t.status === "Pending Clearance",
+    ).length;
     return {
       collected,
       count: successful.length,
@@ -109,11 +148,7 @@ export default function FeesCollection() {
 
     if (editId) {
       setTransactions((prev) =>
-        prev.map((t) =>
-          t.id === editId
-            ? { ...t, ...form }
-            : t
-        )
+        prev.map((t) => (t.id === editId ? { ...t, ...form } : t)),
       );
     } else {
       const newTxn = {
@@ -182,12 +217,16 @@ export default function FeesCollection() {
           {feeStructure.map((f) => (
             <div key={f.head} className="rounded-xl bg-paper p-3.5">
               <p className="text-[11.5px] text-slate-text/70">{f.head}</p>
-              <p className="font-display font-bold text-ink text-lg mt-1">₹{f.termAmount.toLocaleString("en-IN")}</p>
+              <p className="font-display font-bold text-ink text-lg mt-1">
+                ₹{f.termAmount.toLocaleString("en-IN")}
+              </p>
             </div>
           ))}
           <div className="rounded-xl bg-ink p-3.5 text-white">
             <p className="text-[11.5px] text-white/60">Total per Student</p>
-            <p className="font-display font-bold text-lg mt-1">₹{totalTerm.toLocaleString("en-IN")}</p>
+            <p className="font-display font-bold text-lg mt-1">
+              ₹{totalTerm.toLocaleString("en-IN")}
+            </p>
           </div>
         </div>
       </Card>
@@ -197,7 +236,10 @@ export default function FeesCollection() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search student, receipt..."
                 value={query}
@@ -205,9 +247,15 @@ export default function FeesCollection() {
                 className="pl-8 w-52"
               />
             </div>
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-w-[140px]">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="min-w-[140px]"
+            >
               {STATUSES.map((s) => (
-                <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>
+                <option key={s} value={s}>
+                  {s === "All" ? "All Status" : s}
+                </option>
               ))}
             </Select>
           </div>
@@ -216,7 +264,9 @@ export default function FeesCollection() {
         {filtered.length === 0 ? (
           <div className="py-14 text-center">
             <Receipt size={36} className="mx-auto text-slate-text/30 mb-3" />
-            <p className="text-[14px] font-medium text-ink">No transactions found</p>
+            <p className="text-[14px] font-medium text-ink">
+              No transactions found
+            </p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try changing filters or record a new payment.
             </p>
@@ -242,15 +292,28 @@ export default function FeesCollection() {
               </thead>
               <tbody>
                 {filtered.map((t) => (
-                  <tr key={t.id} className="border-b border-black/[0.04] hover:bg-paper/60">
-                    <td className="px-5 py-3 font-mono text-[12px] text-slate-text">{t.receipt}</td>
-                    <td className="px-5 py-3 font-semibold text-ink">{t.student}</td>
+                  <tr
+                    key={t.id}
+                    className="border-b border-black/[0.04] hover:bg-paper/60"
+                  >
+                    <td className="px-5 py-3 font-mono text-[12px] text-slate-text">
+                      {t.receipt}
+                    </td>
+                    <td className="px-5 py-3 font-semibold text-ink">
+                      {t.student}
+                    </td>
                     <td className="px-5 py-3 text-slate-text">{t.class}</td>
                     <td className="px-5 py-3 text-slate-text">{t.term}</td>
-                    <td className="px-5 py-3 text-slate-text font-medium">{t.amount ? `₹${t.amount.toLocaleString("en-IN")}` : "—"}</td>
+                    <td className="px-5 py-3 text-slate-text font-medium">
+                      {t.amount ? `₹${t.amount.toLocaleString("en-IN")}` : "—"}
+                    </td>
                     <td className="px-5 py-3 text-slate-text">{t.mode}</td>
-                    <td className="px-5 py-3 text-slate-text whitespace-nowrap">{t.date}</td>
-                    <td className="px-5 py-3"><Pill tone={statusTone(t.status)}>{t.status}</Pill></td>
+                    <td className="px-5 py-3 text-slate-text whitespace-nowrap">
+                      {t.date}
+                    </td>
+                    <td className="px-5 py-3">
+                      <Pill tone={statusTone(t.status)}>{t.status}</Pill>
+                    </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1">
                         <button
@@ -316,25 +379,41 @@ export default function FeesCollection() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Class</label>
-                  <Select value={form.class} onChange={(e) => updateForm("class", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Class
+                  </label>
+                  <Select
+                    value={form.class}
+                    onChange={(e) => updateForm("class", e.target.value)}
+                  >
                     {CLASSES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Term</label>
-                  <Select value={form.term} onChange={(e) => updateForm("term", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Term
+                  </label>
+                  <Select
+                    value={form.term}
+                    onChange={(e) => updateForm("term", e.target.value)}
+                  >
                     {TERMS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Amount (₹)</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Amount (₹)
+                </label>
                 <Input
                   type="number"
                   min={0}
@@ -345,16 +424,28 @@ export default function FeesCollection() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Mode</label>
-                  <Select value={form.mode} onChange={(e) => updateForm("mode", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Mode
+                  </label>
+                  <Select
+                    value={form.mode}
+                    onChange={(e) => updateForm("mode", e.target.value)}
+                  >
                     {MODES.map((m) => (
-                      <option key={m} value={m}>{m}</option>
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Status</label>
-                  <Select value={form.status} onChange={(e) => updateForm("status", e.target.value)}>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Status
+                  </label>
+                  <Select
+                    value={form.status}
+                    onChange={(e) => updateForm("status", e.target.value)}
+                  >
                     <option value="Success">Success</option>
                     <option value="Pending Clearance">Pending Clearance</option>
                     <option value="Overdue">Overdue</option>
@@ -363,7 +454,9 @@ export default function FeesCollection() {
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Date</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Date
+                </label>
                 <Input
                   type="date"
                   value={form.date}

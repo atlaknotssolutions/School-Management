@@ -22,8 +22,9 @@ import {
   statusTone,
   StatCard,
 } from "../components/UI";
-import { admissionEnquiries as initialEnquiries } from "../data/records";
 import { api } from "../lib/api";
+
+const initialEnquiries = [];
 
 const STATUS_OPTIONS = [
   "All",
@@ -582,7 +583,6 @@ export default function AdmissionEnquiry() {
 // import { useState } from "react";
 // import { Plus, Phone, Search } from "lucide-react";
 // import { PageIntro, Card, Button, Input, Pill, statusTone, StatCard } from "../components/UI";
-// import { admissionEnquiries } from "../data/records";
 // import { UserPlus, PhoneCall, CalendarCheck2, XCircle } from "lucide-react";
 
 // export default function AdmissionEnquiry() {

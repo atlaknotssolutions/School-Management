@@ -20,11 +20,10 @@ import {
   StatCard,
   toast,
 } from "../components/UI";
-import {
-  hostelRooms as roomsSeed,
-  hostelStudents as studentSeed,
-} from "../data/modules";
 import { api } from "../lib/api";
+
+const roomsSeed = [];
+const studentSeed = [];
 
 const WINGS = ["Boys", "Girls"];
 const BLOCKS = ["A", "B", "C", "D"];

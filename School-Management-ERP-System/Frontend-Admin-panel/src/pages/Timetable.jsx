@@ -1,26 +1,77 @@
 import { useMemo, useState } from "react";
 import {
-  Download, Printer, Clock, CalendarDays, BookOpen,
-  Plus, X, Save, Pencil
+  Download,
+  Printer,
+  Clock,
+  CalendarDays,
+  BookOpen,
+  Plus,
+  X,
+  Save,
+  Pencil,
 } from "lucide-react";
-import { PageIntro, Card, Button, Select, Pill, StatCard, Input } from "../components/UI";
-import { periods as defaultPeriods } from "../data/academics";
+import {
+  PageIntro,
+  Card,
+  Button,
+  Select,
+  Pill,
+  StatCard,
+  Input,
+} from "../components/UI";
+const defaultPeriods = [];
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const CLASS_OPTIONS = [
-  "Nursery", "LKG", "UKG",
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-  "11-Sci", "11-Com", "12-Sci", "12-Com"
+  "Nursery",
+  "LKG",
+  "UKG",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11-Sci",
+  "11-Com",
+  "12-Sci",
+  "12-Com",
 ];
 
 const SECTION_OPTIONS = ["A", "B", "C"];
 
 const ALL_SUBJECTS = [
-  "Mathematics", "English", "Science", "Hindi", "Social Science",
-  "Computer Science", "Physical Education", "Sports", "Art", "Music",
-  "Library", "Physics", "Chemistry", "Biology", "Accountancy",
-  "Business Studies", "Economics", "Break", "—"
+  "Mathematics",
+  "English",
+  "Science",
+  "Hindi",
+  "Social Science",
+  "Computer Science",
+  "Physical Education",
+  "Sports",
+  "Art",
+  "Music",
+  "Library",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Accountancy",
+  "Business Studies",
+  "Economics",
+  "Break",
+  "—",
 ];
 
 const subjectColor = {
@@ -62,36 +113,252 @@ const subjectTeacher = {
 // Initial mock schedules
 const INITIAL_SCHEDULES = {
   "8-A": {
-    Monday:    ["Mathematics", "English", "Science", "Break", "Social Science", "Hindi", "Computer Science", "Physical Education"],
-    Tuesday:   ["Science", "Mathematics", "Hindi", "Break", "English", "Computer Science", "Social Science", "Art"],
-    Wednesday: ["English", "Social Science", "Mathematics", "Break", "Science", "Hindi", "Physical Education", "Library"],
-    Thursday:  ["Hindi", "Science", "English", "Break", "Mathematics", "Social Science", "Computer Science", "Music"],
-    Friday:    ["Social Science", "English", "Hindi", "Break", "Computer Science", "Mathematics", "Science", "Art"],
-    Saturday:  ["Mathematics", "Science", "English", "Break", "Sports", "Sports", "—", "—"],
+    Monday: [
+      "Mathematics",
+      "English",
+      "Science",
+      "Break",
+      "Social Science",
+      "Hindi",
+      "Computer Science",
+      "Physical Education",
+    ],
+    Tuesday: [
+      "Science",
+      "Mathematics",
+      "Hindi",
+      "Break",
+      "English",
+      "Computer Science",
+      "Social Science",
+      "Art",
+    ],
+    Wednesday: [
+      "English",
+      "Social Science",
+      "Mathematics",
+      "Break",
+      "Science",
+      "Hindi",
+      "Physical Education",
+      "Library",
+    ],
+    Thursday: [
+      "Hindi",
+      "Science",
+      "English",
+      "Break",
+      "Mathematics",
+      "Social Science",
+      "Computer Science",
+      "Music",
+    ],
+    Friday: [
+      "Social Science",
+      "English",
+      "Hindi",
+      "Break",
+      "Computer Science",
+      "Mathematics",
+      "Science",
+      "Art",
+    ],
+    Saturday: [
+      "Mathematics",
+      "Science",
+      "English",
+      "Break",
+      "Sports",
+      "Sports",
+      "—",
+      "—",
+    ],
   },
   "8-B": {
-    Monday:    ["English", "Mathematics", "Hindi", "Break", "Science", "Social Science", "Art", "Computer Science"],
-    Tuesday:   ["Mathematics", "Science", "English", "Break", "Hindi", "Physical Education", "Social Science", "Library"],
-    Wednesday: ["Science", "Hindi", "Mathematics", "Break", "English", "Computer Science", "Music", "Social Science"],
-    Thursday:  ["Social Science", "English", "Science", "Break", "Mathematics", "Hindi", "Physical Education", "Art"],
-    Friday:    ["Hindi", "Mathematics", "Computer Science", "Break", "Science", "English", "Social Science", "Library"],
-    Saturday:  ["English", "Science", "Mathematics", "Break", "Sports", "Sports", "—", "—"],
+    Monday: [
+      "English",
+      "Mathematics",
+      "Hindi",
+      "Break",
+      "Science",
+      "Social Science",
+      "Art",
+      "Computer Science",
+    ],
+    Tuesday: [
+      "Mathematics",
+      "Science",
+      "English",
+      "Break",
+      "Hindi",
+      "Physical Education",
+      "Social Science",
+      "Library",
+    ],
+    Wednesday: [
+      "Science",
+      "Hindi",
+      "Mathematics",
+      "Break",
+      "English",
+      "Computer Science",
+      "Music",
+      "Social Science",
+    ],
+    Thursday: [
+      "Social Science",
+      "English",
+      "Science",
+      "Break",
+      "Mathematics",
+      "Hindi",
+      "Physical Education",
+      "Art",
+    ],
+    Friday: [
+      "Hindi",
+      "Mathematics",
+      "Computer Science",
+      "Break",
+      "Science",
+      "English",
+      "Social Science",
+      "Library",
+    ],
+    Saturday: [
+      "English",
+      "Science",
+      "Mathematics",
+      "Break",
+      "Sports",
+      "Sports",
+      "—",
+      "—",
+    ],
   },
   "9-A": {
-    Monday:    ["Mathematics", "Science", "English", "Break", "Hindi", "Social Science", "Computer Science", "Physical Education"],
-    Tuesday:   ["Science", "Mathematics", "Hindi", "Break", "English", "Art", "Social Science", "Library"],
-    Wednesday: ["English", "Social Science", "Mathematics", "Break", "Science", "Computer Science", "Hindi", "Music"],
-    Thursday:  ["Hindi", "Science", "English", "Break", "Mathematics", "Physical Education", "Social Science", "Art"],
-    Friday:    ["Social Science", "English", "Computer Science", "Break", "Mathematics", "Science", "Hindi", "Library"],
-    Saturday:  ["Mathematics", "English", "Science", "Break", "Sports", "Sports", "—", "—"],
+    Monday: [
+      "Mathematics",
+      "Science",
+      "English",
+      "Break",
+      "Hindi",
+      "Social Science",
+      "Computer Science",
+      "Physical Education",
+    ],
+    Tuesday: [
+      "Science",
+      "Mathematics",
+      "Hindi",
+      "Break",
+      "English",
+      "Art",
+      "Social Science",
+      "Library",
+    ],
+    Wednesday: [
+      "English",
+      "Social Science",
+      "Mathematics",
+      "Break",
+      "Science",
+      "Computer Science",
+      "Hindi",
+      "Music",
+    ],
+    Thursday: [
+      "Hindi",
+      "Science",
+      "English",
+      "Break",
+      "Mathematics",
+      "Physical Education",
+      "Social Science",
+      "Art",
+    ],
+    Friday: [
+      "Social Science",
+      "English",
+      "Computer Science",
+      "Break",
+      "Mathematics",
+      "Science",
+      "Hindi",
+      "Library",
+    ],
+    Saturday: [
+      "Mathematics",
+      "English",
+      "Science",
+      "Break",
+      "Sports",
+      "Sports",
+      "—",
+      "—",
+    ],
   },
   "10-A": {
-    Monday:    ["Mathematics", "Physics", "English", "Break", "Chemistry", "Hindi", "Computer Science", "Physical Education"],
-    Tuesday:   ["Physics", "Mathematics", "Chemistry", "Break", "English", "Biology", "Hindi", "Library"],
-    Wednesday: ["English", "Chemistry", "Mathematics", "Break", "Physics", "Computer Science", "Biology", "Art"],
-    Thursday:  ["Hindi", "Physics", "English", "Break", "Mathematics", "Chemistry", "Physical Education", "Music"],
-    Friday:    ["Chemistry", "English", "Biology", "Break", "Mathematics", "Physics", "Hindi", "Library"],
-    Saturday:  ["Mathematics", "Physics", "English", "Break", "Sports", "Sports", "—", "—"],
+    Monday: [
+      "Mathematics",
+      "Physics",
+      "English",
+      "Break",
+      "Chemistry",
+      "Hindi",
+      "Computer Science",
+      "Physical Education",
+    ],
+    Tuesday: [
+      "Physics",
+      "Mathematics",
+      "Chemistry",
+      "Break",
+      "English",
+      "Biology",
+      "Hindi",
+      "Library",
+    ],
+    Wednesday: [
+      "English",
+      "Chemistry",
+      "Mathematics",
+      "Break",
+      "Physics",
+      "Computer Science",
+      "Biology",
+      "Art",
+    ],
+    Thursday: [
+      "Hindi",
+      "Physics",
+      "English",
+      "Break",
+      "Mathematics",
+      "Chemistry",
+      "Physical Education",
+      "Music",
+    ],
+    Friday: [
+      "Chemistry",
+      "English",
+      "Biology",
+      "Break",
+      "Mathematics",
+      "Physics",
+      "Hindi",
+      "Library",
+    ],
+    Saturday: [
+      "Mathematics",
+      "Physics",
+      "English",
+      "Break",
+      "Sports",
+      "Sports",
+      "—",
+      "—",
+    ],
   },
 };
 
@@ -198,10 +465,34 @@ export default function Timetable() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={CalendarDays} label="Working Days" value="6" sub="Mon – Sat" accent="info" />
-        <StatCard icon={Clock} label="Periods / Day" value={String(defaultPeriods.length)} sub="Including break" accent="amber" />
-        <StatCard icon={BookOpen} label="Subjects this week" value={String(uniqueSubjects)} sub={schedule ? `${formatClassLabel(cls)}-${section}` : "—"} accent="success" />
-        <StatCard icon={Clock} label="School Timing" value="9:00 – 2:35" sub="Full day" accent="info" />
+        <StatCard
+          icon={CalendarDays}
+          label="Working Days"
+          value="6"
+          sub="Mon – Sat"
+          accent="info"
+        />
+        <StatCard
+          icon={Clock}
+          label="Periods / Day"
+          value={String(defaultPeriods.length)}
+          sub="Including break"
+          accent="amber"
+        />
+        <StatCard
+          icon={BookOpen}
+          label="Subjects this week"
+          value={String(uniqueSubjects)}
+          sub={schedule ? `${formatClassLabel(cls)}-${section}` : "—"}
+          accent="success"
+        />
+        <StatCard
+          icon={Clock}
+          label="School Timing"
+          value="9:00 – 2:35"
+          sub="Full day"
+          accent="info"
+        />
       </div>
 
       {/* Main Card */}
@@ -213,14 +504,26 @@ export default function Timetable() {
         }
         action={
           <div className="flex flex-wrap gap-2">
-            <Select value={cls} onChange={(e) => setCls(e.target.value)} className="min-w-[130px]">
+            <Select
+              value={cls}
+              onChange={(e) => setCls(e.target.value)}
+              className="min-w-[130px]"
+            >
               {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{formatClassLabel(c)}</option>
+                <option key={c} value={c}>
+                  {formatClassLabel(c)}
+                </option>
               ))}
             </Select>
-            <Select value={section} onChange={(e) => setSection(e.target.value)} className="min-w-[100px]">
+            <Select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="min-w-[100px]"
+            >
               {SECTION_OPTIONS.map((s) => (
-                <option key={s} value={s}>Section {s}</option>
+                <option key={s} value={s}>
+                  Section {s}
+                </option>
               ))}
             </Select>
             {schedule && (
@@ -233,13 +536,19 @@ export default function Timetable() {
       >
         {!schedule ? (
           <div className="py-16 text-center">
-            <CalendarDays size={40} className="mx-auto text-slate-text/25 mb-3" />
-            <p className="text-[15px] font-semibold text-ink">No timetable found</p>
+            <CalendarDays
+              size={40}
+              className="mx-auto text-slate-text/25 mb-3"
+            />
+            <p className="text-[15px] font-semibold text-ink">
+              No timetable found
+            </p>
             <p className="text-[13.5px] text-slate-text/60 mt-1.5 max-w-sm mx-auto">
               There is no schedule for {formatClassLabel(cls)}-{section} yet.
             </p>
             <Button variant="amber" className="mt-5" onClick={openAdd}>
-              <Plus size={15} /> Create Timetable for {formatClassLabel(cls)}-{section}
+              <Plus size={15} /> Create Timetable for {formatClassLabel(cls)}-
+              {section}
             </Button>
           </div>
         ) : (
@@ -250,7 +559,10 @@ export default function Timetable() {
                 .filter(([k]) => !["Break", "—"].includes(k))
                 .slice(0, 9)
                 .map(([subj, clsName]) => (
-                  <span key={subj} className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border ${clsName}`}>
+                  <span
+                    key={subj}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border ${clsName}`}
+                  >
                     {subj}
                   </span>
                 ))}
@@ -264,9 +576,14 @@ export default function Timetable() {
               <table className="w-full text-[12.5px] border-separate border-spacing-1.5 min-w-[920px]">
                 <thead>
                   <tr>
-                    <th className="text-left text-slate-text/60 text-[11px] uppercase font-semibold px-2 w-24 sticky left-0 bg-white z-10">Day</th>
+                    <th className="text-left text-slate-text/60 text-[11px] uppercase font-semibold px-2 w-24 sticky left-0 bg-white z-10">
+                      Day
+                    </th>
                     {defaultPeriods.map((p) => (
-                      <th key={p} className="text-slate-text/60 text-[10.5px] font-semibold pb-1 text-center min-w-[100px]">
+                      <th
+                        key={p}
+                        className="text-slate-text/60 text-[10.5px] font-semibold pb-1 text-center min-w-[100px]"
+                      >
                         {p}
                       </th>
                     ))}
@@ -281,7 +598,9 @@ export default function Timetable() {
                       {(schedule[day] || []).map((subj, i) => {
                         const isBreak = subj === "Break";
                         const isEmpty = subj === "—";
-                        const colorCls = subjectColor[subj] || "bg-slate-50 text-slate-500 border-slate-100";
+                        const colorCls =
+                          subjectColor[subj] ||
+                          "bg-slate-50 text-slate-500 border-slate-100";
                         const teacher = subjectTeacher[subj];
                         return (
                           <td key={i}>
@@ -289,7 +608,9 @@ export default function Timetable() {
                               className={`rounded-xl py-2.5 px-1.5 text-center border min-h-[52px] flex flex-col items-center justify-center ${colorCls}`}
                               title={teacher ? `${subj} · ${teacher}` : subj}
                             >
-                              <span className="font-semibold leading-tight">{isEmpty ? "—" : subj}</span>
+                              <span className="font-semibold leading-tight">
+                                {isEmpty ? "—" : subj}
+                              </span>
                               {!isBreak && !isEmpty && teacher && (
                                 <span className="text-[10px] opacity-70 mt-0.5 truncate max-w-full">
                                   {teacher.split(" ")[0]}
@@ -306,7 +627,10 @@ export default function Timetable() {
             </div>
 
             <div className="mt-4 pt-4 border-t border-black/[0.06] text-[12.5px] text-slate-text/70">
-              Showing timetable for <strong className="text-ink">{formatClassLabel(cls)}-{section}</strong>
+              Showing timetable for{" "}
+              <strong className="text-ink">
+                {formatClassLabel(cls)}-{section}
+              </strong>
             </div>
           </>
         )}
@@ -315,7 +639,10 @@ export default function Timetable() {
       {/* ========== ADD / EDIT MODAL ========== */}
       {showEditor && draft && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={handleCancel} />
+          <div
+            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+            onClick={handleCancel}
+          />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
@@ -327,7 +654,10 @@ export default function Timetable() {
                   Select class & section, then assign subjects for each period.
                 </p>
               </div>
-              <button onClick={handleCancel} className="p-2 rounded-lg hover:bg-paper text-slate-text">
+              <button
+                onClick={handleCancel}
+                className="p-2 rounded-lg hover:bg-paper text-slate-text"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -335,7 +665,9 @@ export default function Timetable() {
             {/* Class / Section selectors */}
             <div className="px-5 py-3 border-b border-black/[0.06] flex flex-wrap gap-3 bg-paper/50">
               <div>
-                <label className="text-[11.5px] font-semibold text-slate-text/70 block mb-1">Class</label>
+                <label className="text-[11.5px] font-semibold text-slate-text/70 block mb-1">
+                  Class
+                </label>
                 <Select
                   value={draftClass}
                   onChange={(e) => setDraftClass(e.target.value)}
@@ -343,12 +675,16 @@ export default function Timetable() {
                   disabled={!!editKey}
                 >
                   {CLASS_OPTIONS.map((c) => (
-                    <option key={c} value={c}>{formatClassLabel(c)}</option>
+                    <option key={c} value={c}>
+                      {formatClassLabel(c)}
+                    </option>
                   ))}
                 </Select>
               </div>
               <div>
-                <label className="text-[11.5px] font-semibold text-slate-text/70 block mb-1">Section</label>
+                <label className="text-[11.5px] font-semibold text-slate-text/70 block mb-1">
+                  Section
+                </label>
                 <Select
                   value={draftSection}
                   onChange={(e) => setDraftSection(e.target.value)}
@@ -356,13 +692,16 @@ export default function Timetable() {
                   disabled={!!editKey}
                 >
                   {SECTION_OPTIONS.map((s) => (
-                    <option key={s} value={s}>Section {s}</option>
+                    <option key={s} value={s}>
+                      Section {s}
+                    </option>
                   ))}
                 </Select>
               </div>
               {schedules[`${draftClass}-${draftSection}`] && !editKey && (
                 <p className="self-end text-[12.5px] text-alert font-medium pb-2">
-                  ⚠ A timetable already exists for this class-section. Saving will overwrite it.
+                  ⚠ A timetable already exists for this class-section. Saving
+                  will overwrite it.
                 </p>
               )}
             </div>
@@ -373,9 +712,14 @@ export default function Timetable() {
                 <table className="w-full text-[12.5px] border-separate border-spacing-1.5 min-w-[900px]">
                   <thead>
                     <tr>
-                      <th className="text-left text-slate-text/60 text-[11px] uppercase font-semibold px-2 w-24">Day</th>
+                      <th className="text-left text-slate-text/60 text-[11px] uppercase font-semibold px-2 w-24">
+                        Day
+                      </th>
                       {defaultPeriods.map((p) => (
-                        <th key={p} className="text-slate-text/60 text-[10.5px] font-semibold pb-1 text-center min-w-[110px]">
+                        <th
+                          key={p}
+                          className="text-slate-text/60 text-[10.5px] font-semibold pb-1 text-center min-w-[110px]"
+                        >
                           {p}
                         </th>
                       ))}
@@ -384,18 +728,25 @@ export default function Timetable() {
                   <tbody>
                     {DAYS.map((day) => (
                       <tr key={day}>
-                        <td className="font-semibold text-ink text-[12.5px] px-2 whitespace-nowrap">{day}</td>
+                        <td className="font-semibold text-ink text-[12.5px] px-2 whitespace-nowrap">
+                          {day}
+                        </td>
                         {(draft[day] || []).map((subj, i) => (
                           <td key={i}>
                             <select
                               value={subj}
-                              onChange={(e) => updateCell(day, i, e.target.value)}
+                              onChange={(e) =>
+                                updateCell(day, i, e.target.value)
+                              }
                               className={`w-full rounded-lg py-2 px-1.5 text-center text-[12px] font-semibold border outline-none focus:border-ink/40 ${
-                                subjectColor[subj] || "bg-white text-slate-600 border-black/10"
+                                subjectColor[subj] ||
+                                "bg-white text-slate-600 border-black/10"
                               }`}
                             >
                               {ALL_SUBJECTS.map((s) => (
-                                <option key={s} value={s}>{s}</option>
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
                               ))}
                             </select>
                           </td>
@@ -409,7 +760,9 @@ export default function Timetable() {
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-black/[0.06] flex justify-end gap-2 bg-white">
-              <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
               <Button variant="amber" onClick={handleSave}>
                 <Save size={15} /> Save Timetable
               </Button>
@@ -421,9 +774,7 @@ export default function Timetable() {
   );
 }
 
-
 // import { PageIntro, Card, Select, Pill } from "../components/UI";
-// import { timetable, periods } from "../data/academics";
 
 // const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 // const subjectColor = {

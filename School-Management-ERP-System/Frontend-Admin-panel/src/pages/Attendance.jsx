@@ -23,7 +23,6 @@ import {
   StatCard,
   Pill,
 } from "../components/UI";
-import { students } from "../data/students";
 import {
   AreaChart,
   Area,
@@ -33,8 +32,10 @@ import {
   CartesianGrid,
   YAxis,
 } from "recharts";
-import { attendanceTrend } from "../data/academics";
 import { api } from "../lib/api";
+
+const students = [];
+const attendanceTrend = [];
 
 const CLASS_OPTIONS = [
   "Nursery",
@@ -439,10 +440,7 @@ export default function Attendance() {
 // import { useMemo, useState } from "react";
 // import { Check, X, Clock3, Download, CalendarCheck } from "lucide-react";
 // import { PageIntro, Card, Button, Select, Avatar, StatCard } from "../components/UI";
-// import { students } from "../data/students";
-// import { classes } from "../data/school";
 // import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, CartesianGrid, YAxis } from "recharts";
-// import { attendanceTrend } from "../data/academics";
 
 // const classShortMap = { "Class 1":"1","Class 2":"2","Class 3":"3","Class 4":"4","Class 5":"5","Class 6":"6","Class 7":"7","Class 8":"8","Class 9":"9","Class 10":"10" };
 

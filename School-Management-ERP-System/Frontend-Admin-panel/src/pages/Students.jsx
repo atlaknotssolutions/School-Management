@@ -25,7 +25,7 @@ import {
   Avatar,
   StatCard,
 } from "../components/UI";
-import { students as initialStudents } from "../data/students";
+const initialStudents = [];
 import { api } from "../lib/api";
 
 const CLASS_OPTIONS = [
@@ -782,7 +782,6 @@ export default function Students() {
 // import { useMemo, useState } from "react";
 // import { Search, Plus, X, Phone, Mail, MapPin, Droplet, Calendar } from "lucide-react";
 // import { PageIntro, Card, Button, Input, Select, Pill, statusTone, Avatar } from "../components/UI";
-// import { students } from "../data/students";
 
 // export default function Students() {
 //   const [query, setQuery] = useState("");

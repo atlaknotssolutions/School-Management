@@ -1,12 +1,25 @@
 import { useMemo, useState } from "react";
 import {
-  Send, User, Megaphone, Search, Plus, X,
-  MessageSquare, Users, Mail
+  Send,
+  User,
+  Megaphone,
+  Search,
+  Plus,
+  X,
+  MessageSquare,
+  Users,
+  Mail,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Select, Input, Pill, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Select,
+  Input,
+  Pill,
+  StatCard,
 } from "../components/UI";
-import { messages as initialMessages } from "../data/records";
+const initialMessages = [];
 
 const BROADCAST_TARGETS = [
   "All Parents",
@@ -68,7 +81,7 @@ export default function Communication() {
 
   const markRead = (id) => {
     setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, unread: false } : m))
+      prev.map((m) => (m.id === id ? { ...m, unread: false } : m)),
     );
     setSelectedId(id);
   };
@@ -92,12 +105,10 @@ export default function Communication() {
     const newMsg = {
       id: Date.now(),
       from: "Jeet Ahirwar (Administrator)",
-      to:
-        compose.type === "broadcast"
-          ? compose.target
-          : compose.to,
+      to: compose.type === "broadcast" ? compose.target : compose.to,
       subject: compose.subject,
-      preview: compose.body.slice(0, 80) + (compose.body.length > 80 ? "..." : ""),
+      preview:
+        compose.body.slice(0, 80) + (compose.body.length > 80 ? "..." : ""),
       body: compose.body,
       date,
       time,
@@ -120,7 +131,13 @@ export default function Communication() {
         title="Communication"
         description="Send one-to-one messages to parents or broadcast announcements to classes and groups."
         right={
-          <Button variant="amber" onClick={() => { setCompose(emptyCompose()); setShowCompose(true); }}>
+          <Button
+            variant="amber"
+            onClick={() => {
+              setCompose(emptyCompose());
+              setShowCompose(true);
+            }}
+          >
             <Plus size={15} /> New Message
           </Button>
         }
@@ -182,14 +199,21 @@ export default function Communication() {
                       : "bg-paper text-slate-text hover:bg-black/5"
                   }`}
                 >
-                  {f === "all" ? "All" : f === "one-to-one" ? "1:1" : "Broadcast"}
+                  {f === "all"
+                    ? "All"
+                    : f === "one-to-one"
+                      ? "1:1"
+                      : "Broadcast"}
                 </button>
               ))}
             </div>
           }
         >
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+            />
             <Input
               placeholder="Search messages..."
               value={query}
@@ -219,7 +243,10 @@ export default function Communication() {
                       {m.type === "broadcast" ? (
                         <Megaphone size={12} className="text-info shrink-0" />
                       ) : (
-                        <User size={12} className="text-slate-text/50 shrink-0" />
+                        <User
+                          size={12}
+                          className="text-slate-text/50 shrink-0"
+                        />
                       )}
                       {m.from}
                     </p>
@@ -261,7 +288,9 @@ export default function Communication() {
                 <div className="mt-3 space-y-1 text-[13px]">
                   <p>
                     <span className="text-slate-text/60">From:</span>{" "}
-                    <span className="font-medium text-ink">{selected.from}</span>
+                    <span className="font-medium text-ink">
+                      {selected.from}
+                    </span>
                   </p>
                   <p>
                     <span className="text-slate-text/60">To:</span>{" "}
@@ -274,14 +303,17 @@ export default function Communication() {
                 {selected.body || selected.preview}
                 {!selected.body && (
                   <p className="text-slate-text/50 mt-3 text-[13px] italic">
-                    (Full message body not stored in demo data — showing preview.)
+                    (Full message body not stored in demo data — showing
+                    preview.)
                   </p>
                 )}
               </div>
 
               {/* Quick reply */}
               <div className="mt-6 pt-5 border-t border-black/[0.06]">
-                <p className="text-[12.5px] font-semibold text-ink mb-2">Quick Reply</p>
+                <p className="text-[12.5px] font-semibold text-ink mb-2">
+                  Quick Reply
+                </p>
                 <textarea
                   rows={3}
                   placeholder="Type a reply..."
@@ -390,7 +422,9 @@ export default function Communication() {
                     onChange={(e) => updateCompose("target", e.target.value)}
                   >
                     {BROADCAST_TARGETS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
                     ))}
                   </Select>
                 </div>
@@ -444,12 +478,9 @@ export default function Communication() {
   );
 }
 
-
-
 // import { useState } from "react";
 // import { Send, Users, User, Megaphone } from "lucide-react";
 // import { PageIntro, Card, Button, Select, Pill } from "../components/UI";
-// import { messages } from "../data/records";
 
 // export default function Communication() {
 //   const [mode, setMode] = useState("one-to-one");

@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, ArrowRight, Lock, Mail } from "lucide-react";
-import { school } from "../data/school";
 import { api } from "../lib/api";
+
+const school = {
+  name: "School Management ERP",
+  shortName: "School ERP",
+  tagline: "School operations, connected",
+  affiliation: "School Administration",
+  session: String(new Date().getFullYear()),
+};
 
 export default function Login() {
   const navigate = useNavigate();

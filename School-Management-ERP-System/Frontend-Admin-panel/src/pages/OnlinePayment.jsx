@@ -1,29 +1,68 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {
-  ShieldCheck, CreditCard, Smartphone, Landmark, CheckCircle2,
-  Search, Download, X
+  ShieldCheck,
+  CreditCard,
+  Smartphone,
+  Landmark,
+  CheckCircle2,
+  Search,
+  Download,
+  X,
 } from "lucide-react";
 import { PageIntro, Card, Button, Input, Pill, Select } from "../components/UI";
-import { feeStructure } from "../data/academics";
-import { students } from "../data/students";
+const feeStructure = [];
+const students = [];
 
 const methods = [
-  { key: "upi", label: "UPI", icon: Smartphone, desc: "Pay via Google Pay, PhonePe, Paytm" },
-  { key: "card", label: "Debit / Credit Card", icon: CreditCard, desc: "Visa, Mastercard, RuPay accepted" },
-  { key: "netbanking", label: "Net Banking", icon: Landmark, desc: "All major Indian banks" },
+  {
+    key: "upi",
+    label: "UPI",
+    icon: Smartphone,
+    desc: "Pay via Google Pay, PhonePe, Paytm",
+  },
+  {
+    key: "card",
+    label: "Debit / Credit Card",
+    icon: CreditCard,
+    desc: "Visa, Mastercard, RuPay accepted",
+  },
+  {
+    key: "netbanking",
+    label: "Net Banking",
+    icon: Landmark,
+    desc: "All major Indian banks",
+  },
 ];
 
 const BANKS = ["State Bank of India", "HDFC Bank", "ICICI Bank", "Axis Bank"];
 
 const CLASS_OPTIONS = [
-  "All", "Nursery", "LKG", "UKG", "1", "2", "3", "4", "5", "6", "7", "8",
-  "9", "10", "11-Sci", "11-Com", "12-Sci", "12-Com"
+  "All",
+  "Nursery",
+  "LKG",
+  "UKG",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11-Sci",
+  "11-Com",
+  "12-Sci",
+  "12-Com",
 ];
 
 function todayDisplay() {
   return new Date().toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -35,7 +74,7 @@ function receiptNo() {
 export default function OnlinePayment() {
   const total = useMemo(
     () => feeStructure.reduce((a, f) => a + f.termAmount, 0),
-    []
+    [],
   );
 
   const [method, setMethod] = useState("upi");
@@ -68,7 +107,7 @@ export default function OnlinePayment() {
   const paidAmount = payments.reduce((a, p) => a + p.amount, 0);
   const paymentCount = payments.length;
   const pendingStudents = new Set(
-    students.map((s) => (s.feeStatus !== "Paid" ? s.id : null)).filter(Boolean)
+    students.map((s) => (s.feeStatus !== "Paid" ? s.id : null)).filter(Boolean),
   ).size;
 
   const paymentReady = () => {
@@ -134,24 +173,46 @@ export default function OnlinePayment() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card bodyClassName="p-5">
-          <p className="text-[12.5px] text-slate-text/80 font-medium">Payments Made</p>
-          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">{paymentCount}</p>
+          <p className="text-[12.5px] text-slate-text/80 font-medium">
+            Payments Made
+          </p>
+          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">
+            {paymentCount}
+          </p>
           <p className="text-[11.5px] text-slate-text/60 mt-2">This session</p>
         </Card>
         <Card bodyClassName="p-5">
-          <p className="text-[12.5px] text-slate-text/80 font-medium">Collected</p>
-          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">₹{(paidAmount / 100000).toFixed(1)}L</p>
-          <p className="text-[11.5px] text-slate-text/60 mt-2">Successful payments</p>
+          <p className="text-[12.5px] text-slate-text/80 font-medium">
+            Collected
+          </p>
+          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">
+            ₹{(paidAmount / 100000).toFixed(1)}L
+          </p>
+          <p className="text-[11.5px] text-slate-text/60 mt-2">
+            Successful payments
+          </p>
         </Card>
         <Card bodyClassName="p-5">
-          <p className="text-[12.5px] text-slate-text/80 font-medium">Pending Students</p>
-          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">{pendingStudents}</p>
-          <p className="text-[11.5px] text-slate-text/60 mt-2">Fees not fully paid</p>
+          <p className="text-[12.5px] text-slate-text/80 font-medium">
+            Pending Students
+          </p>
+          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">
+            {pendingStudents}
+          </p>
+          <p className="text-[11.5px] text-slate-text/60 mt-2">
+            Fees not fully paid
+          </p>
         </Card>
         <Card bodyClassName="p-5">
-          <p className="text-[12.5px] text-slate-text/80 font-medium">Gateway</p>
-          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">PCI-DSS</p>
-          <p className="text-[11.5px] text-slate-text/60 mt-2">256-bit encrypted</p>
+          <p className="text-[12.5px] text-slate-text/80 font-medium">
+            Gateway
+          </p>
+          <p className="font-display text-[28px] font-bold text-ink mt-1 leading-none">
+            PCI-DSS
+          </p>
+          <p className="text-[11.5px] text-slate-text/60 mt-2">
+            256-bit encrypted
+          </p>
         </Card>
       </div>
 
@@ -171,13 +232,26 @@ export default function OnlinePayment() {
               </thead>
               <tbody>
                 {payments.map((p) => (
-                  <tr key={p.id} className="border-b border-black/[0.04] hover:bg-paper/60">
-                    <td className="px-5 py-3 font-mono text-[12px] text-slate-text">{p.receipt}</td>
-                    <td className="px-5 py-3 font-semibold text-ink">{p.student}</td>
+                  <tr
+                    key={p.id}
+                    className="border-b border-black/[0.04] hover:bg-paper/60"
+                  >
+                    <td className="px-5 py-3 font-mono text-[12px] text-slate-text">
+                      {p.receipt}
+                    </td>
+                    <td className="px-5 py-3 font-semibold text-ink">
+                      {p.student}
+                    </td>
                     <td className="px-5 py-3 text-slate-text">{p.method}</td>
-                    <td className="px-5 py-3 text-slate-text font-medium">₹{p.amount.toLocaleString("en-IN")}</td>
-                    <td className="px-5 py-3 text-slate-text whitespace-nowrap">{p.date}</td>
-                    <td className="px-5 py-3"><Pill tone="success">Success</Pill></td>
+                    <td className="px-5 py-3 text-slate-text font-medium">
+                      ₹{p.amount.toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-5 py-3 text-slate-text whitespace-nowrap">
+                      {p.date}
+                    </td>
+                    <td className="px-5 py-3">
+                      <Pill tone="success">Success</Pill>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -189,36 +263,58 @@ export default function OnlinePayment() {
       <div className="grid lg:grid-cols-3 gap-5">
         <Card title="Fee Summary" className="lg:col-span-1 h-fit">
           <button
-            onClick={() => { setPickerOpen(true); setQuery(""); }}
+            onClick={() => {
+              setPickerOpen(true);
+              setQuery("");
+            }}
             className="flex items-center gap-3 pb-4 mb-4 border-b border-black/[0.06] w-full text-left hover:bg-paper/60 rounded-lg transition-colors"
           >
-            <img src={student.avatar} alt={student.name} className="w-12 h-12 rounded-xl object-cover" />
+            <img
+              src={student.avatar}
+              alt={student.name}
+              className="w-12 h-12 rounded-xl object-cover"
+            />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-ink text-[13.5px] truncate">{student.name}</p>
-              <p className="text-[11.5px] text-slate-text/60">{student.id} · Class {student.class}-{student.section}</p>
+              <p className="font-semibold text-ink text-[13.5px] truncate">
+                {student.name}
+              </p>
+              <p className="text-[11.5px] text-slate-text/60">
+                {student.id} · Class {student.class}-{student.section}
+              </p>
             </div>
-            <span className="text-[11.5px] font-semibold text-info shrink-0">Change</span>
+            <span className="text-[11.5px] font-semibold text-info shrink-0">
+              Change
+            </span>
           </button>
 
           {student.feeStatus !== "Paid" ? (
             <>
               <div className="space-y-2">
                 {feeStructure.map((f) => (
-                  <div key={f.head} className="flex justify-between text-[13px]">
+                  <div
+                    key={f.head}
+                    className="flex justify-between text-[13px]"
+                  >
                     <span className="text-slate-text">{f.head}</span>
-                    <span className="text-ink font-medium">₹{f.termAmount.toLocaleString("en-IN")}</span>
+                    <span className="text-ink font-medium">
+                      ₹{f.termAmount.toLocaleString("en-IN")}
+                    </span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between pt-3 mt-3 border-t border-black/[0.06] font-bold text-ink">
                 <span>Total (Term 2)</span>
-                <span className="font-display">₹{total.toLocaleString("en-IN")}</span>
+                <span className="font-display">
+                  ₹{total.toLocaleString("en-IN")}
+                </span>
               </div>
             </>
           ) : (
             <div className="text-center py-8">
               <CheckCircle2 size={34} className="text-success mx-auto mb-3" />
-              <p className="text-[13.5px] font-semibold text-ink">Fees Fully Paid</p>
+              <p className="text-[13.5px] font-semibold text-ink">
+                Fees Fully Paid
+              </p>
               <p className="text-[12.5px] text-slate-text/60 mt-1">
                 No pending dues for this student.
               </p>
@@ -229,26 +325,43 @@ export default function OnlinePayment() {
         <Card className="lg:col-span-2">
           {!paid ? (
             <>
-              <h3 className="font-display font-bold text-ink mb-4">Choose Payment Method</h3>
+              <h3 className="font-display font-bold text-ink mb-4">
+                Choose Payment Method
+              </h3>
               <div className="grid sm:grid-cols-3 gap-3 mb-6">
                 {methods.map((m) => (
                   <button
                     key={m.key}
                     onClick={() => setMethod(m.key)}
                     className={`text-left p-4 rounded-xl border transition-colors ${
-                      method === m.key ? "border-amber bg-amber/10" : "border-black/10 hover:border-black/20"
+                      method === m.key
+                        ? "border-amber bg-amber/10"
+                        : "border-black/10 hover:border-black/20"
                     }`}
                   >
-                    <m.icon size={20} className={method === m.key ? "text-amber-dark" : "text-slate-text/60"} />
-                    <p className="font-semibold text-ink text-[13px] mt-2">{m.label}</p>
-                    <p className="text-[11.5px] text-slate-text/60 mt-0.5">{m.desc}</p>
+                    <m.icon
+                      size={20}
+                      className={
+                        method === m.key
+                          ? "text-amber-dark"
+                          : "text-slate-text/60"
+                      }
+                    />
+                    <p className="font-semibold text-ink text-[13px] mt-2">
+                      {m.label}
+                    </p>
+                    <p className="text-[11.5px] text-slate-text/60 mt-0.5">
+                      {m.desc}
+                    </p>
                   </button>
                 ))}
               </div>
 
               {method === "upi" && (
                 <div className="mb-6">
-                  <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">UPI ID *</label>
+                  <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">
+                    UPI ID *
+                  </label>
                   <Input
                     placeholder="yourname@upi"
                     value={upiId}
@@ -259,7 +372,9 @@ export default function OnlinePayment() {
               {method === "card" && (
                 <div className="mb-6 space-y-3">
                   <div>
-                    <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">Card Number *</label>
+                    <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">
+                      Card Number *
+                    </label>
                     <Input
                       placeholder="Card Number"
                       value={cardNumber}
@@ -268,7 +383,9 @@ export default function OnlinePayment() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">Expiry *</label>
+                      <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">
+                        Expiry *
+                      </label>
                       <Input
                         placeholder="MM / YY"
                         value={cardExpiry}
@@ -276,7 +393,9 @@ export default function OnlinePayment() {
                       />
                     </div>
                     <div>
-                      <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">CVV *</label>
+                      <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">
+                        CVV *
+                      </label>
                       <Input
                         placeholder="CVV"
                         type="password"
@@ -289,28 +408,42 @@ export default function OnlinePayment() {
               )}
               {method === "netbanking" && (
                 <div className="mb-6">
-                  <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">Select Bank</label>
-                  <Select value={bank} onChange={(e) => setBank(e.target.value)} className="w-full">
+                  <label className="text-[12.5px] font-semibold text-ink mb-1.5 block">
+                    Select Bank
+                  </label>
+                  <Select
+                    value={bank}
+                    onChange={(e) => setBank(e.target.value)}
+                    className="w-full"
+                  >
                     {BANKS.map((b) => (
-                      <option key={b} value={b}>{b}</option>
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
                     ))}
                   </Select>
                   <p className="text-[11.5px] text-slate-text/60 mt-1.5">
-                    You'll be redirected to {bank} Net Banking to complete the payment.
+                    You'll be redirected to {bank} Net Banking to complete the
+                    payment.
                   </p>
                 </div>
               )}
 
               <div className="flex items-center gap-2 text-[12px] text-slate-text/60 mb-4">
-                <ShieldCheck size={15} className="text-success" /> 256-bit encrypted, PCI-DSS compliant payment gateway
+                <ShieldCheck size={15} className="text-success" /> 256-bit
+                encrypted, PCI-DSS compliant payment gateway
               </div>
               <Button
                 variant="amber"
                 className="w-full justify-center"
-                disabled={processing || student.feeStatus === "Paid" || !paymentReady()}
+                disabled={
+                  processing || student.feeStatus === "Paid" || !paymentReady()
+                }
                 onClick={handlePay}
               >
-                {processing ? "Processing..." : `Pay ₹${total.toLocaleString("en-IN")}`}
+                {processing
+                  ? "Processing..."
+                  : `Pay ₹${total.toLocaleString("en-IN")}`}
               </Button>
               {student.feeStatus === "Paid" && (
                 <p className="text-center text-[12px] text-success mt-3">
@@ -321,7 +454,9 @@ export default function OnlinePayment() {
           ) : (
             <div className="text-center py-10">
               <CheckCircle2 size={52} className="text-success mx-auto mb-4" />
-              <h3 className="font-display text-xl font-bold text-ink">Payment Successful</h3>
+              <h3 className="font-display text-xl font-bold text-ink">
+                Payment Successful
+              </h3>
               <p className="text-[13px] text-slate-text mt-1.5">
                 ₹{total.toLocaleString("en-IN")} paid via {method}
               </p>
@@ -329,8 +464,12 @@ export default function OnlinePayment() {
                 <Pill tone="success">Receipt {receipt}</Pill>
               </div>
               <div className="flex justify-center gap-3 mt-6">
-                <Button variant="outline" onClick={() => window.print()}><Download size={15} /> Download Receipt</Button>
-                <Button variant="ghost" onClick={handleMakeAnother}>Make Another Payment</Button>
+                <Button variant="outline" onClick={() => window.print()}>
+                  <Download size={15} /> Download Receipt
+                </Button>
+                <Button variant="ghost" onClick={handleMakeAnother}>
+                  Make Another Payment
+                </Button>
               </div>
             </div>
           )}
@@ -347,7 +486,9 @@ export default function OnlinePayment() {
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
               <div>
-                <h3 className="font-display font-semibold text-ink text-[17px]">Select Student</h3>
+                <h3 className="font-display font-semibold text-ink text-[17px]">
+                  Select Student
+                </h3>
                 <p className="text-[12.5px] text-slate-text/70 mt-0.5">
                   Choose the student to pay fees for.
                 </p>
@@ -362,7 +503,10 @@ export default function OnlinePayment() {
 
             <div className="px-5 pt-4 flex gap-2">
               <div className="relative flex-1">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+                />
                 <Input
                   placeholder="Search by name or ID..."
                   value={query}
@@ -370,9 +514,15 @@ export default function OnlinePayment() {
                   className="pl-8"
                 />
               </div>
-              <Select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="min-w-[120px]">
+              <Select
+                value={classFilter}
+                onChange={(e) => setClassFilter(e.target.value)}
+                className="min-w-[120px]"
+              >
                 {CLASS_OPTIONS.map((c) => (
-                  <option key={c} value={c}>{c === "All" ? "All Classes" : c}</option>
+                  <option key={c} value={c}>
+                    {c === "All" ? "All Classes" : c}
+                  </option>
                 ))}
               </Select>
             </div>
@@ -380,8 +530,13 @@ export default function OnlinePayment() {
             <div className="px-5 py-4 max-h-[60vh] overflow-y-auto">
               {filteredStudents.length === 0 ? (
                 <div className="py-12 text-center">
-                  <Search size={30} className="mx-auto text-slate-text/30 mb-2" />
-                  <p className="text-[13.5px] font-medium text-ink">No students found</p>
+                  <Search
+                    size={30}
+                    className="mx-auto text-slate-text/30 mb-2"
+                  />
+                  <p className="text-[13.5px] font-medium text-ink">
+                    No students found
+                  </p>
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-2">
@@ -395,13 +550,29 @@ export default function OnlinePayment() {
                           : "border-black/[0.06] hover:border-black/20"
                       }`}
                     >
-                      <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                      <img
+                        src={s.avatar}
+                        alt={s.name}
+                        className="w-9 h-9 rounded-lg object-cover shrink-0"
+                      />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-semibold text-ink truncate">{s.name}</p>
-                        <p className="text-[11.5px] text-slate-text/60">{s.id} · Class {s.class}-{s.section}</p>
+                        <p className="text-[13px] font-semibold text-ink truncate">
+                          {s.name}
+                        </p>
+                        <p className="text-[11.5px] text-slate-text/60">
+                          {s.id} · Class {s.class}-{s.section}
+                        </p>
                       </div>
                       <span className="shrink-0">
-                        <Pill tone={s.feeStatus === "Paid" ? "success" : s.feeStatus === "Partially Paid" ? "amber" : "alert"}>
+                        <Pill
+                          tone={
+                            s.feeStatus === "Paid"
+                              ? "success"
+                              : s.feeStatus === "Partially Paid"
+                                ? "amber"
+                                : "alert"
+                          }
+                        >
                           {s.feeStatus}
                         </Pill>
                       </span>

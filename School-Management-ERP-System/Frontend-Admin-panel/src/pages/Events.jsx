@@ -1,16 +1,35 @@
 import { useMemo, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import {
-  Plus, MapPin, Clock, X, Save, Pencil, CalendarDays,
-  Search, PartyPopper
+  Plus,
+  MapPin,
+  Clock,
+  X,
+  Save,
+  Pencil,
+  CalendarDays,
+  Search,
+  PartyPopper,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Input, Select, Pill, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  StatCard,
 } from "../components/UI";
-import { events as initialEvents } from "../data/records";
+const initialEvents = [];
 
 const CATEGORIES = [
-  "Sports", "National", "Academic", "Cultural", "Holiday", "Meeting", "Other"
+  "Sports",
+  "National",
+  "Academic",
+  "Cultural",
+  "Holiday",
+  "Meeting",
+  "Other",
 ];
 
 const categoryTone = {
@@ -25,19 +44,29 @@ const categoryTone = {
 
 // Default images by category (Unsplash)
 const CATEGORY_IMAGES = {
-  Sports: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&h=500&fit=crop",
-  National: "https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=800&h=500&fit=crop",
-  Academic: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=500&fit=crop",
-  Cultural: "https://images.unsplash.com/photo-1503095396549-807759245b35?w=800&h=500&fit=crop",
-  Holiday: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&h=500&fit=crop",
-  Meeting: "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&h=500&fit=crop",
-  Other: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=500&fit=crop",
+  Sports:
+    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&h=500&fit=crop",
+  National:
+    "https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=800&h=500&fit=crop",
+  Academic:
+    "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=500&fit=crop",
+  Cultural:
+    "https://images.unsplash.com/photo-1503095396549-807759245b35?w=800&h=500&fit=crop",
+  Holiday:
+    "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&h=500&fit=crop",
+  Meeting:
+    "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&h=500&fit=crop",
+  Other:
+    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=500&fit=crop",
 };
 
 function formatDate(d) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric", weekday: "short"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    weekday: "short",
   });
 }
 
@@ -66,7 +95,7 @@ export default function Events() {
 
   const cats = useMemo(
     () => ["All", ...new Set(events.map((e) => e.category))],
-    [events]
+    [events],
   );
 
   const filtered = useMemo(() => {
@@ -98,7 +127,10 @@ export default function Events() {
     const past = events.length - upcoming;
     const thisMonth = events.filter((e) => {
       const d = new Date(e.date);
-      return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      return (
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
     }).length;
     return {
       total: events.length,
@@ -135,15 +167,11 @@ export default function Events() {
     if (!form.title.trim() || !form.date) return;
 
     const image =
-      form.image ||
-      CATEGORY_IMAGES[form.category] ||
-      CATEGORY_IMAGES.Other;
+      form.image || CATEGORY_IMAGES[form.category] || CATEGORY_IMAGES.Other;
 
     if (editId) {
       setEvents((prev) =>
-        prev.map((e) =>
-          e.id === editId ? { ...e, ...form, image } : e
-        )
+        prev.map((e) => (e.id === editId ? { ...e, ...form, image } : e)),
       );
     } else {
       const newEvent = {
@@ -210,7 +238,10 @@ export default function Events() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
         <div className="relative max-w-xs flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+          />
           <Input
             placeholder="Search events..."
             value={query}
@@ -260,7 +291,10 @@ export default function Events() {
       {filtered.length === 0 ? (
         <Card>
           <div className="py-14 text-center">
-            <PartyPopper size={36} className="mx-auto text-slate-text/30 mb-3" />
+            <PartyPopper
+              size={36}
+              className="mx-auto text-slate-text/30 mb-3"
+            />
             <p className="text-[14px] font-medium text-ink">No events found</p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try different filters or create a new event.
@@ -275,7 +309,11 @@ export default function Events() {
           {filtered.map((e) => {
             const isPast = new Date(e.date) < today;
             return (
-              <Card key={e.id} className="overflow-hidden group" bodyClassName="p-0">
+              <Card
+                key={e.id}
+                className="overflow-hidden group"
+                bodyClassName="p-0"
+              >
                 <div className="relative">
                   <img
                     src={e.image}
@@ -400,7 +438,9 @@ export default function Events() {
                   onChange={(e) => updateForm("category", e.target.value)}
                 >
                   {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </Select>
               </div>
@@ -452,12 +492,8 @@ export default function Events() {
   );
 }
 
-
-
-
 // import { Plus, MapPin, Clock } from "lucide-react";
 // import { PageIntro, Card, Button, Pill } from "../components/UI";
-// import { events } from "../data/records";
 
 // export default function Events() {
 //   return (

@@ -1,12 +1,39 @@
 import { useMemo, useState } from "react";
 import {
-  Plus, CalendarDays, X, Save, Search, CheckCircle2, XCircle, Clock, UserCheck, Trash2
+  Plus,
+  CalendarDays,
+  X,
+  Save,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  UserCheck,
+  Trash2,
 } from "lucide-react";
-import { PageIntro, Card, Button, Input, Select, Pill, statusTone, StatCard, toast } from "../components/UI";
+import {
+  PageIntro,
+  Card,
+  Button,
+  Input,
+  Select,
+  Pill,
+  statusTone,
+  StatCard,
+  toast,
+} from "../components/UI";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { leaveRequests as leaveSeed, leaveBalance as balanceSeed } from "../data/modules";
+const leaveSeed = [];
+const balanceSeed = [];
 
-const TYPES = ["Casual Leave", "Sick Leave", "Privilege Leave", "Medical Leave", "Maternity Leave", "Emergency Leave"];
+const TYPES = [
+  "Casual Leave",
+  "Sick Leave",
+  "Privilege Leave",
+  "Medical Leave",
+  "Maternity Leave",
+  "Emergency Leave",
+];
 const STATUS_FILTERS = ["All", "Approved", "Pending", "Rejected"];
 const ROLE_OPTIONS = ["Staff", "Student"];
 
@@ -14,7 +41,8 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 function daysBetween(from, to) {
-  const a = new Date(from), b = new Date(to);
+  const a = new Date(from),
+    b = new Date(to);
   return Math.max(1, Math.round((b - a) / 86400000) + 1);
 }
 function nextId(list) {
@@ -22,7 +50,14 @@ function nextId(list) {
 }
 
 function emptyForm() {
-  return { applicant: "", role: "Staff", type: "Casual Leave", from: todayISO(), to: inDays(1), reason: "" };
+  return {
+    applicant: "",
+    role: "Staff",
+    type: "Casual Leave",
+    from: todayISO(),
+    to: inDays(1),
+    reason: "",
+  };
 }
 function inDays(n) {
   const d = new Date();
@@ -31,8 +66,14 @@ function inDays(n) {
 }
 
 export default function Leave() {
-  const [requests, setRequests] = useLocalStorage("sap_leave_requests", leaveSeed);
-  const [balance, setBalance] = useLocalStorage("sap_leave_balance", balanceSeed);
+  const [requests, setRequests] = useLocalStorage(
+    "sap_leave_requests",
+    leaveSeed,
+  );
+  const [balance, setBalance] = useLocalStorage(
+    "sap_leave_balance",
+    balanceSeed,
+  );
   const [tab, setTab] = useState("requests");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -43,7 +84,10 @@ export default function Leave() {
     const q = query.toLowerCase();
     return requests.filter((l) => {
       const matchStatus = statusFilter === "All" || l.status === statusFilter;
-      const matchQuery = !q || l.applicant.toLowerCase().includes(q) || l.type.toLowerCase().includes(q);
+      const matchQuery =
+        !q ||
+        l.applicant.toLowerCase().includes(q) ||
+        l.type.toLowerCase().includes(q);
       return matchStatus && matchQuery;
     });
   }, [requests, query, statusFilter]);
@@ -57,14 +101,21 @@ export default function Leave() {
   }, [requests]);
 
   const setStatus = (id, status) => {
-    setRequests((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
-    toast(status === "Approved" ? "Leave approved" : "Leave rejected", status === "Approved" ? "success" : "error");
+    setRequests((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status } : l)),
+    );
+    toast(
+      status === "Approved" ? "Leave approved" : "Leave rejected",
+      status === "Approved" ? "success" : "error",
+    );
     // reflect in balance when approving staff leave
     if (status === "Approved") {
       const lv = requests.find((l) => l.id === id);
       if (lv && lv.role === "Staff") {
         setBalance((prev) =>
-          prev.map((b) => b.name === lv.applicant ? { ...b, used: b.used + lv.days } : b)
+          prev.map((b) =>
+            b.name === lv.applicant ? { ...b, used: b.used + lv.days } : b,
+          ),
         );
       }
     }
@@ -79,7 +130,14 @@ export default function Leave() {
     if (!form.applicant.trim() || !form.from || !form.to) return;
     const days = daysBetween(form.from, form.to);
     setRequests((prev) => [
-      { id: nextId(prev), ...form, applicant: form.applicant.trim(), days, appliedOn: todayISO(), status: "Pending" },
+      {
+        id: nextId(prev),
+        ...form,
+        applicant: form.applicant.trim(),
+        days,
+        appliedOn: todayISO(),
+        status: "Pending",
+      },
       ...prev,
     ]);
     setShowModal(false);
@@ -95,14 +153,42 @@ export default function Leave() {
         eyebrow="Human Resources"
         title="Leave Management"
         description="Apply for and manage leaves for staff and students."
-        right={<Button variant="amber" onClick={() => setShowModal(true)}><Plus size={15} /> Apply Leave</Button>}
+        right={
+          <Button variant="amber" onClick={() => setShowModal(true)}>
+            <Plus size={15} /> Apply Leave
+          </Button>
+        }
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Clock} label="Total Requests" value={String(stats.total)} sub="This session" accent="info" />
-        <StatCard icon={Clock} label="Pending" value={String(stats.pending)} sub="Awaiting approval" accent="amber" />
-        <StatCard icon={CheckCircle2} label="Approved" value={String(stats.approved)} sub="Granted" accent="success" />
-        <StatCard icon={UserCheck} label="Staff Leave Days" value={String(totalLeaveDays)} sub="Used across staff" accent="alert" />
+        <StatCard
+          icon={Clock}
+          label="Total Requests"
+          value={String(stats.total)}
+          sub="This session"
+          accent="info"
+        />
+        <StatCard
+          icon={Clock}
+          label="Pending"
+          value={String(stats.pending)}
+          sub="Awaiting approval"
+          accent="amber"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Approved"
+          value={String(stats.approved)}
+          sub="Granted"
+          accent="success"
+        />
+        <StatCard
+          icon={UserCheck}
+          label="Staff Leave Days"
+          value={String(totalLeaveDays)}
+          sub="Used across staff"
+          accent="alert"
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -115,7 +201,9 @@ export default function Leave() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold border transition-colors ${
-                tab === t.key ? "bg-ink text-white border-ink" : "bg-white text-slate-text border-black/10 hover:border-ink/30"
+                tab === t.key
+                  ? "bg-ink text-white border-ink"
+                  : "bg-white text-slate-text border-black/10 hover:border-ink/30"
               }`}
             >
               {t.label}
@@ -130,49 +218,97 @@ export default function Leave() {
           action={
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
-                <Input placeholder="Search applicant..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-8 w-52" />
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+                />
+                <Input
+                  placeholder="Search applicant..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-8 w-52"
+                />
               </div>
-              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-w-[130px]">
-                {STATUS_FILTERS.map((s) => <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>)}
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="min-w-[130px]"
+              >
+                {STATUS_FILTERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s === "All" ? "All Status" : s}
+                  </option>
+                ))}
               </Select>
             </div>
           }
         >
           {filtered.length === 0 ? (
             <div className="py-14 text-center">
-              <CalendarDays size={36} className="mx-auto text-slate-text/30 mb-3" />
-              <p className="text-[14px] font-medium text-ink">No leave requests found</p>
-              <p className="text-[13px] text-slate-text/60 mt-1">Adjust filters or apply for a new leave.</p>
+              <CalendarDays
+                size={36}
+                className="mx-auto text-slate-text/30 mb-3"
+              />
+              <p className="text-[14px] font-medium text-ink">
+                No leave requests found
+              </p>
+              <p className="text-[13px] text-slate-text/60 mt-1">
+                Adjust filters or apply for a new leave.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((l) => {
                 const isStudent = l.role === "Student";
                 return (
-                  <div key={l.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border border-black/[0.06] hover:border-black/10 hover:bg-paper/40 transition-colors">
+                  <div
+                    key={l.id}
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border border-black/[0.06] hover:border-black/10 hover:bg-paper/40 transition-colors"
+                  >
                     <div className="w-11 h-11 rounded-xl bg-info/10 text-info flex items-center justify-center shrink-0">
                       <CalendarDays size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[14px] font-semibold text-ink">{l.applicant}</p>
-                        <Pill tone={isStudent ? "info" : "amber"}>{l.role}</Pill>
+                        <p className="text-[14px] font-semibold text-ink">
+                          {l.applicant}
+                        </p>
+                        <Pill tone={isStudent ? "info" : "amber"}>
+                          {l.role}
+                        </Pill>
                         <Pill tone={statusTone(l.status)}>{l.status}</Pill>
                       </div>
                       <p className="text-[13.5px] text-slate-text mt-1">
                         {l.type} · {l.days} day(s) · {l.from} → {l.to}
                       </p>
-                      <p className="text-[12px] text-slate-text/60 mt-0.5">{l.reason}</p>
+                      <p className="text-[12px] text-slate-text/60 mt-0.5">
+                        {l.reason}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 sm:flex-col sm:items-end">
                       {l.status === "Pending" && (
                         <div className="flex items-center gap-2">
-                          <button onClick={() => setStatus(l.id, "Approved")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-success hover:underline"><CheckCircle2 size={14} /> Approve</button>
-                          <button onClick={() => setStatus(l.id, "Rejected")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-alert hover:underline"><XCircle size={14} /> Reject</button>
+                          <button
+                            onClick={() => setStatus(l.id, "Approved")}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold text-success hover:underline"
+                          >
+                            <CheckCircle2 size={14} /> Approve
+                          </button>
+                          <button
+                            onClick={() => setStatus(l.id, "Rejected")}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold text-alert hover:underline"
+                          >
+                            <XCircle size={14} /> Reject
+                          </button>
                         </div>
                       )}
-                      <button onClick={() => deleteLeave(l.id)} className="p-1.5 rounded-lg hover:bg-paper text-slate-text/60 hover:text-alert transition-colors" title="Delete"><Trash2 size={14} /></button>
+                      <button
+                        onClick={() => deleteLeave(l.id)}
+                        className="p-1.5 rounded-lg hover:bg-paper text-slate-text/60 hover:text-alert transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -197,16 +333,30 @@ export default function Leave() {
                 {balance.map((b) => {
                   const remaining = b.entitled - b.used;
                   return (
-                    <tr key={b.id} className="border-b border-black/[0.04] hover:bg-paper/60">
-                      <td className="px-5 py-3 font-semibold text-ink">{b.name}</td>
+                    <tr
+                      key={b.id}
+                      className="border-b border-black/[0.04] hover:bg-paper/60"
+                    >
+                      <td className="px-5 py-3 font-semibold text-ink">
+                        {b.name}
+                      </td>
                       <td className="px-5 py-3 text-slate-text">{b.role}</td>
-                      <td className="px-5 py-3 text-slate-text">{b.entitled}</td>
+                      <td className="px-5 py-3 text-slate-text">
+                        {b.entitled}
+                      </td>
                       <td className="px-5 py-3 text-slate-text">{b.used}</td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-ink">{remaining}</span>
+                          <span className="font-semibold text-ink">
+                            {remaining}
+                          </span>
                           <div className="w-24 h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
-                            <div className={`h-full rounded-full ${remaining <= 2 ? "bg-alert" : "bg-success"}`} style={{ width: `${Math.min(100, (remaining / b.entitled) * 100)}%` }} />
+                            <div
+                              className={`h-full rounded-full ${remaining <= 2 ? "bg-alert" : "bg-success"}`}
+                              style={{
+                                width: `${Math.min(100, (remaining / b.entitled) * 100)}%`,
+                              }}
+                            />
                           </div>
                         </div>
                       </td>
@@ -221,45 +371,102 @@ export default function Leave() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div
+            className="absolute inset-0 bg-ink/50 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
-              <h3 className="font-display font-semibold text-ink text-[17px]">Apply Leave</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 rounded-lg hover:bg-paper text-slate-text"><X size={20} /></button>
+              <h3 className="font-display font-semibold text-ink text-[17px]">
+                Apply Leave
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 rounded-lg hover:bg-paper text-slate-text"
+              >
+                <X size={20} />
+              </button>
             </div>
             <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <LeaveField label="Applicant Name *">
-                  <Input value={form.applicant} onChange={(e) => setForm((f) => ({ ...f, applicant: e.target.value }))} />
+                  <Input
+                    value={form.applicant}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, applicant: e.target.value }))
+                    }
+                  />
                 </LeaveField>
                 <LeaveField label="Role">
-                  <Select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
-                    {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                  <Select
+                    value={form.role}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, role: e.target.value }))
+                    }
+                  >
+                    {ROLE_OPTIONS.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
                   </Select>
                 </LeaveField>
               </div>
               <LeaveField label="Leave Type">
-                <Select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
-                  {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                <Select
+                  value={form.type}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, type: e.target.value }))
+                  }
+                >
+                  {TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
                 </Select>
               </LeaveField>
               <div className="grid grid-cols-2 gap-3">
                 <LeaveField label="From">
-                  <Input type="date" value={form.from} onChange={(e) => setForm((f) => ({ ...f, from: e.target.value }))} />
+                  <Input
+                    type="date"
+                    value={form.from}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, from: e.target.value }))
+                    }
+                  />
                 </LeaveField>
                 <LeaveField label="To">
-                  <Input type="date" value={form.to} onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))} />
+                  <Input
+                    type="date"
+                    value={form.to}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, to: e.target.value }))
+                    }
+                  />
                 </LeaveField>
               </div>
               <LeaveField label="Reason">
-                <textarea rows={3} placeholder="Reason for leave..." value={form.reason}
-                  onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
-                  className="w-full rounded-lg border border-black/10 p-3 text-[13px] outline-none focus:border-ink/40 resize-none" />
+                <textarea
+                  rows={3}
+                  placeholder="Reason for leave..."
+                  value={form.reason}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, reason: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-black/10 p-3 text-[13px] outline-none focus:border-ink/40 resize-none"
+                />
               </LeaveField>
             </div>
             <div className="px-5 py-4 border-t border-black/[0.06] flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
-              <Button variant="amber" onClick={apply} disabled={!form.applicant.trim() || !form.from || !form.to}>
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="amber"
+                onClick={apply}
+                disabled={!form.applicant.trim() || !form.from || !form.to}
+              >
                 <Save size={15} /> Submit Application
               </Button>
             </div>
@@ -273,7 +480,9 @@ export default function Leave() {
 function LeaveField({ label, children }) {
   return (
     <div>
-      <label className="text-[12px] font-semibold text-ink mb-1.5 block">{label}</label>
+      <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+        {label}
+      </label>
       {children}
     </div>
   );

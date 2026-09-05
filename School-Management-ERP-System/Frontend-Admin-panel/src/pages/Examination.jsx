@@ -1,23 +1,56 @@
 import { useMemo, useState } from "react";
 import {
-  Plus, MapPin, Calendar, Clock, Search, X, Save,
-  ClipboardList, BookOpen, Users, Pencil
+  Plus,
+  MapPin,
+  Calendar,
+  Clock,
+  Search,
+  X,
+  Save,
+  ClipboardList,
+  BookOpen,
+  Users,
+  Pencil,
 } from "lucide-react";
 import {
-  PageIntro, Card, Button, Select, Input, Pill, StatCard
+  PageIntro,
+  Card,
+  Button,
+  Select,
+  Input,
+  Pill,
+  StatCard,
 } from "../components/UI";
-import { examSchedule as initialExams } from "../data/academics";
+const initialExams = [];
 
 const CLASS_OPTIONS = [
   "All",
-  "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
-  "Class 11 (Science)", "Class 11 (Commerce)", "Class 12 (Science)", "Class 12 (Commerce)"
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11 (Science)",
+  "Class 11 (Commerce)",
+  "Class 12 (Science)",
+  "Class 12 (Commerce)",
 ];
 
 const SUBJECT_OPTIONS = [
-  "Mathematics", "English", "Science", "Hindi", "Social Science",
-  "Computer Science", "Physics", "Chemistry", "Biology",
-  "Accountancy", "Business Studies", "Economics", "Physical Education"
+  "Mathematics",
+  "English",
+  "Science",
+  "Hindi",
+  "Social Science",
+  "Computer Science",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Accountancy",
+  "Business Studies",
+  "Economics",
+  "Physical Education",
 ];
 
 const EXAM_TYPES = [
@@ -28,12 +61,22 @@ const EXAM_TYPES = [
   "Term 2 — Mid Term",
   "Term 2 — Final",
   "Pre-Board",
-  "Practical"
+  "Practical",
 ];
 
 const ROOM_OPTIONS = [
-  "Room 101", "Room 102", "Room 201", "Room 202", "Room 203", "Room 204",
-  "Room 301", "Room 302", "Lab 1", "Lab 2", "Auditorium", "Hall A"
+  "Room 101",
+  "Room 102",
+  "Room 201",
+  "Room 202",
+  "Room 203",
+  "Room 204",
+  "Room 301",
+  "Room 302",
+  "Lab 1",
+  "Lab 2",
+  "Auditorium",
+  "Hall A",
 ];
 
 const TIME_OPTIONS = [
@@ -42,13 +85,16 @@ const TIME_OPTIONS = [
   "10:00 AM – 12:00 PM",
   "11:00 AM – 1:00 PM",
   "1:00 PM – 3:00 PM",
-  "2:00 PM – 4:00 PM"
+  "2:00 PM – 4:00 PM",
 ];
 
 function formatDate(d) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric", weekday: "short"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    weekday: "short",
   });
 }
 
@@ -136,7 +182,7 @@ export default function Examination() {
 
     if (editId) {
       setExams((prev) =>
-        prev.map((e) => (e.id === editId ? { ...e, ...form } : e))
+        prev.map((e) => (e.id === editId ? { ...e, ...form } : e)),
       );
     } else {
       const newExam = {
@@ -206,7 +252,10 @@ export default function Examination() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40" />
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-text/40"
+              />
               <Input
                 placeholder="Search subject, exam, room..."
                 value={query}
@@ -214,9 +263,15 @@ export default function Examination() {
                 className="pl-8 w-52"
               />
             </div>
-            <Select value={cls} onChange={(e) => setCls(e.target.value)} className="min-w-[140px]">
+            <Select
+              value={cls}
+              onChange={(e) => setCls(e.target.value)}
+              className="min-w-[140px]"
+            >
               {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c === "All" ? "All Classes" : c}</option>
+                <option key={c} value={c}>
+                  {c === "All" ? "All Classes" : c}
+                </option>
               ))}
             </Select>
           </div>
@@ -224,7 +279,10 @@ export default function Examination() {
       >
         {Object.keys(grouped).length === 0 ? (
           <div className="py-14 text-center">
-            <ClipboardList size={36} className="mx-auto text-slate-text/30 mb-3" />
+            <ClipboardList
+              size={36}
+              className="mx-auto text-slate-text/30 mb-3"
+            />
             <p className="text-[14px] font-medium text-ink">No exams found</p>
             <p className="text-[13px] text-slate-text/60 mt-1">
               Try changing filters or schedule a new exam.
@@ -243,7 +301,8 @@ export default function Examination() {
                   </h4>
                   <Pill tone="info">{group.exam}</Pill>
                   <span className="text-[12px] text-slate-text/50">
-                    {group.items.length} paper{group.items.length > 1 ? "s" : ""}
+                    {group.items.length} paper
+                    {group.items.length > 1 ? "s" : ""}
                   </span>
                 </div>
 
@@ -256,7 +315,9 @@ export default function Examination() {
                         <th className="px-4 py-2.5 font-semibold">Time</th>
                         <th className="px-4 py-2.5 font-semibold">Room</th>
                         <th className="px-4 py-2.5 font-semibold">Max Marks</th>
-                        <th className="px-4 py-2.5 font-semibold text-right">Actions</th>
+                        <th className="px-4 py-2.5 font-semibold text-right">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -267,22 +328,33 @@ export default function Examination() {
                             key={e.id}
                             className="border-b border-black/[0.04] last:border-0 hover:bg-paper/40 transition-colors"
                           >
-                            <td className="px-4 py-3 font-semibold text-ink">{e.subject}</td>
+                            <td className="px-4 py-3 font-semibold text-ink">
+                              {e.subject}
+                            </td>
                             <td className="px-4 py-3 text-slate-text">
                               <span className="inline-flex items-center gap-1.5">
-                                <Calendar size={13} className="text-slate-text/50" />
+                                <Calendar
+                                  size={13}
+                                  className="text-slate-text/50"
+                                />
                                 {formatDate(e.date)}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-slate-text">
                               <span className="inline-flex items-center gap-1.5">
-                                <Clock size={13} className="text-slate-text/50" />
+                                <Clock
+                                  size={13}
+                                  className="text-slate-text/50"
+                                />
                                 {e.time}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-slate-text">
                               <span className="inline-flex items-center gap-1">
-                                <MapPin size={13} className="text-slate-text/50" />
+                                <MapPin
+                                  size={13}
+                                  className="text-slate-text/50"
+                                />
                                 {e.room}
                               </span>
                             </td>
@@ -345,44 +417,58 @@ export default function Examination() {
             {/* Form */}
             <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Exam Type</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Exam Type
+                </label>
                 <Select
                   value={form.exam}
                   onChange={(e) => updateForm("exam", e.target.value)}
                 >
                   {EXAM_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Class</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Class
+                  </label>
                   <Select
                     value={form.class}
                     onChange={(e) => updateForm("class", e.target.value)}
                   >
                     {CLASS_OPTIONS.filter((c) => c !== "All").map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Subject</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Subject
+                  </label>
                   <Select
                     value={form.subject}
                     onChange={(e) => updateForm("subject", e.target.value)}
                   >
                     {SUBJECT_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Date</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Date
+                </label>
                 <Input
                   type="date"
                   value={form.date}
@@ -392,31 +478,41 @@ export default function Examination() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Time</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Time
+                  </label>
                   <Select
                     value={form.time}
                     onChange={(e) => updateForm("time", e.target.value)}
                   >
                     {TIME_OPTIONS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">Room</label>
+                  <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                    Room
+                  </label>
                   <Select
                     value={form.room}
                     onChange={(e) => updateForm("room", e.target.value)}
                   >
                     {ROOM_OPTIONS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
                     ))}
                   </Select>
                 </div>
               </div>
 
               <div>
-                <label className="text-[12px] font-semibold text-ink mb-1.5 block">Max Marks</label>
+                <label className="text-[12px] font-semibold text-ink mb-1.5 block">
+                  Max Marks
+                </label>
                 <Input
                   type="number"
                   min="10"
@@ -447,12 +543,8 @@ export default function Examination() {
   );
 }
 
-
-
-
 // import { Plus, MapPin } from "lucide-react";
 // import { PageIntro, Card, Button, Pill } from "../components/UI";
-// import { examSchedule } from "../data/academics";
 
 // export default function Examination() {
 //   const grouped = examSchedule.reduce((acc, e) => {
