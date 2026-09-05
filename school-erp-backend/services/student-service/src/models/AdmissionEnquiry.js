@@ -1,0 +1,22 @@
+const mongoose = require("mongoose");
+
+const enquirySchema = new mongoose.Schema(
+  {
+    childName: { type: String, required: true },
+    parentName: { type: String, required: true },
+    classApplied: { type: String, required: true },
+    contact: { type: String, required: true },
+    email: { type: String },
+    source: { type: String, enum: ["Website", "Referral", "Walk-in", "Phone", "Other"], default: "Other" },
+    status: {
+      type: String,
+      enum: ["New", "Contacted", "Campus Visit Scheduled", "Admitted", "Rejected"],
+      default: "New",
+    },
+    followUpDate: { type: Date },
+    notes: { type: String },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("AdmissionEnquiry", enquirySchema);
